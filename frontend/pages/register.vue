@@ -52,9 +52,17 @@
         }
 
         const { apiBase } = useRuntimeConfig().public
+        const { csrfURL } = useRuntimeConfig().public
+        await $fetch(csrfURL, {
+            credentials: 'include'
+        })
         try {
             const response = await $fetch(`${apiBase}/register`, {
                 method: 'POST',
+                credentials: 'include' ,
+                headers: {
+                    'X-XSRF-TOKEN': useCookie('XSRF-TOKEN').value
+                },
                 body: {
                     username: username.value,
                     password: password.value
@@ -64,7 +72,6 @@
         router.push('/login')
         } catch (error) {
             const backendErrors = error.response?._data?.errors
-            console.log(backendErrors)
             if (backendErrors) {
                 for (const key in backendErrors) {
                     errors.value[key] = backendErrors[key][0]

@@ -58,7 +58,6 @@
             user.value = response.user
             router.push('/account')
         } catch (error) {
-            console.log(error)
             const backendErrors = error.response?._data?.errors
             if (backendErrors) {
                 for (const key in backendErrors) {
