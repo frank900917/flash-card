@@ -33,33 +33,29 @@
 </template>
 
 <script setup>
-    const router = useRouter()
-    const username = ref('')
-    const password = ref('')
-    const confirmPassword = ref('')
-    const errors = ref({
-        username: '',
-        password: '',
-        confirmPassword: ''
-    })
+    const router = useRouter();
+    const username = ref('');
+    const password = ref('');
+    const confirmPassword = ref('');
+    const errors = ref({});
     
     const handleRegister = async () => {
-        errors.value = {}
+        errors.value = {};
         if (password.value !== confirmPassword.value) {
-            errors.value.password = '密碼與確認密碼不一致'
-            errors.value.confirmPassword = '密碼與確認密碼不一致'
-            return
+            errors.value.password = '密碼與確認密碼不一致';
+            errors.value.confirmPassword = '密碼與確認密碼不一致';
+            return;
         }
 
-        const { apiBase } = useRuntimeConfig().public
-        const { csrfURL } = useRuntimeConfig().public
+        const { apiBase } = useRuntimeConfig().public;
+        const { csrfURL } = useRuntimeConfig().public;
         await $fetch(csrfURL, {
             credentials: 'include'
-        })
+        });
         try {
             const response = await $fetch(`${apiBase}/register`, {
                 method: 'POST',
-                credentials: 'include' ,
+                credentials: 'include',
                 headers: {
                     'X-XSRF-TOKEN': useCookie('XSRF-TOKEN').value
                 },
@@ -67,20 +63,20 @@
                     username: username.value,
                     password: password.value
                 }
-            })
-        alert(response.message)
-        router.push('/login')
+            });
+        alert(response.message);
+        router.push('/login');
         } catch (error) {
-            const backendErrors = error.response?._data?.errors
+            const backendErrors = error.response?._data?.errors;
             if (backendErrors) {
                 for (const key in backendErrors) {
-                    errors.value[key] = backendErrors[key][0]
+                    errors.value[key] = backendErrors[key][0];
                     if (key === 'password') {
-                        errors.value.confirmPassword = errors.value[key]
+                        errors.value.confirmPassword = errors.value[key];
                     }
                 }
             } else {
-                alert(error)
+                alert(error);
             }
         }
     }

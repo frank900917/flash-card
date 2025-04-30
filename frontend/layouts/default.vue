@@ -28,12 +28,12 @@
 </template>
 
 <script setup>
-    const router = useRouter()
-    const { user, fetchUser } = useAuth()
-    const { apiBase } = useRuntimeConfig().public
+    const router = useRouter();
+    const { user, fetchUser } = useAuth();
+    const { apiBase } = useRuntimeConfig().public;
 
     onMounted(() => {
-        fetchUser()
+        fetchUser();
     })
 
     const logout = async () => {
@@ -43,8 +43,8 @@
             headers: {
                 'X-XSRF-TOKEN': useCookie('XSRF-TOKEN').value
             }
-        })
-        user.value = null
-        await router.push('/')
+        });
+        user.value = null;
+        await router.push('/');
     }
 </script>

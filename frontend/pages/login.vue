@@ -27,22 +27,19 @@
 </template>
 
 <script setup>
-    const router = useRouter()
-    const username = ref('')
-    const password = ref('')
-    const errors = ref({
-        username: '',
-        password: ''
-    })
+    const router = useRouter();
+    const username = ref('');
+    const password = ref('');
+    const errors = ref({});
     const handleLogin = async () => {        
-        const { apiBase } = useRuntimeConfig().public
-        const { csrfURL } = useRuntimeConfig().public
-        const user = useState('user', () => null)
-        errors.value = {}
+        const { apiBase } = useRuntimeConfig().public;
+        const { csrfURL } = useRuntimeConfig().public;
+        const user = useState('user', () => null);
+        errors.value = {};
 
         await $fetch(csrfURL, {
             credentials: 'include'
-        })
+        });
         try {
             const response = await $fetch(`${apiBase}/login`, {
                 method: 'POST',
@@ -54,17 +51,17 @@
                     username: username.value,
                     password: password.value
                 }
-            })
-            user.value = response.user
-            router.push('/account')
+            });
+            user.value = response.user;
+            router.push('/account');
         } catch (error) {
-            const backendErrors = error.response?._data?.errors
+            const backendErrors = error.response?._data?.errors;
             if (backendErrors) {
                 for (const key in backendErrors) {
-                    errors.value[key] = backendErrors[key][0]
+                    errors.value[key] = backendErrors[key][0];
                 }
             } else {
-                alert(error)
+                alert(error);
             }
         }
     }
