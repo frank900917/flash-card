@@ -10,13 +10,14 @@ class FlashCardSetController extends Controller
 {
     public function index()
     {
-        // $sets = FlashCardSet::where('user_id', Auth::id())->with('details')->withCount('details')->get();
-
         $sets = FlashCardSet::select('id', 'title', 'description', 'author', 'isPublic', 'updated_at')
                             ->where('user_id', Auth::id())
                             ->with(['details'])
                             ->withCount('details')
                             ->get();
+        if (!$sets) {
+            return response()->json(['message' => 'Not Found'], 404);
+        }
         return response()->json($sets);
     }
 
@@ -63,6 +64,10 @@ class FlashCardSetController extends Controller
     {
         $set = FlashCardSet::where('id', $id)->where('user_id', Auth::id())->with('details')->firstOrFail();
 
+        if (!$set) {
+            return response()->json(['message' => 'Not Found'], 404);
+        }
+
         return response()->json($set);
     }
 
@@ -86,6 +91,10 @@ class FlashCardSetController extends Controller
 
         $set = FlashCardSet::where('user_id', Auth::id())->findOrFail($id);
 
+        if (!$set) {
+            return response()->json(['message' => 'Not Found'], 404);
+        }
+        
         $set->update($validated);
 
         // 刪除全部單字並重新建立
@@ -108,6 +117,10 @@ class FlashCardSetController extends Controller
     {
         $set = FlashCardSet::where('user_id', Auth::id())->findOrFail($id);
 
+        if (!$set) {
+            return response()->json(['message' => 'Not Found'], 404);
+        }
+
         $set->delete();
 
         return response()->json([
@@ -118,6 +131,10 @@ class FlashCardSetController extends Controller
     public function publicSets()
     {
         $sets = FlashCardSet::where('public', true)->with('details')->get();
+
+        if (!$sets) {
+            return response()->json(['message' => 'Not Found'], 404);
+        }
 
         return response()->json($sets);
     }

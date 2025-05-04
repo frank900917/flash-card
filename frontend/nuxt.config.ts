@@ -5,6 +5,21 @@ export default defineNuxtConfig({
   css: ['bootstrap/dist/css/bootstrap.min.css'],
   plugins: ['~/plugins/bootstrap.client.ts'],
   pages: true,
+  modules: ['nuxt-auth-sanctum'],
+  sanctum: {
+    baseUrl: 'http://localhost:8000',
+    mode: 'cookie',
+    endpoints: {
+      csrf: '/sanctum/csrf-cookie',
+      login: '/api/login',
+      logout: '/api/logout',
+      user: '/api/user',
+    },
+    redirect: {
+      onLogin: '/account',
+      onAuthOnly: '/login'
+    }
+  },
   runtimeConfig: {
     public: {
       apiBase: 'http://localhost:8000/api',

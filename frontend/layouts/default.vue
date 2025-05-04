@@ -28,23 +28,6 @@
 </template>
 
 <script setup>
-    const router = useRouter();
-    const { user, fetchUser } = useAuth();
-    const { apiBase } = useRuntimeConfig().public;
-
-    onMounted(() => {
-        fetchUser();
-    })
-
-    const logout = async () => {
-        await $fetch(`${apiBase}/logout`, {
-            method: 'POST',
-            credentials: 'include',
-            headers: {
-                'X-XSRF-TOKEN': useCookie('XSRF-TOKEN').value
-            }
-        });
-        user.value = null;
-        await router.push('/');
-    }
+    const user = useSanctumUser();
+    const { logout } = useSanctumAuth();
 </script>

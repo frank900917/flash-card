@@ -9,7 +9,11 @@
 </template>
 
 <script setup>
-    const user = useState('user');
+    definePageMeta({
+        middleware: ['sanctum:auth']
+    });
+
+    const user = useSanctumUser();
     const errors = ref({});
     const { apiBase } = useRuntimeConfig().public;
     const { csrfURL } = useRuntimeConfig().public;
@@ -18,7 +22,7 @@
     const form = ref({
         title: '',
         description: '',
-        author: user.value.username,
+        author: '',
         isPublic: false,
         details: [
             { word: '', word_description: '' }
@@ -26,6 +30,7 @@
     });
 
     async function handleSubmit() {
+        form.value.author = user.value.username;
         if (form.value.details.length === 0) {
             alert('至少需要新增一個單字');
             return;

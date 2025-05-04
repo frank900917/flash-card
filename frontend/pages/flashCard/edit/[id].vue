@@ -8,46 +8,26 @@
             返回單字集
             </button>
         </div>
-        <FlashCardForm :form="form" :onSubmit="handleSubmit" :errors="errors"/>
+        <FlashCardForm v-if="flashCardSet" :form="flashCardSet" :onSubmit="handleSubmit" :errors="errors"/>
     </div>
 </template>
 
 <script setup>
+    definePageMeta({
+        middleware: ['sanctum:auth']
+    });
+
     const route = useRoute()
-    const user = useState('user');
     const errors = ref({});
     const id = route.params.id;
     const { apiBase } = useRuntimeConfig().public;
     const { csrfURL } = useRuntimeConfig().public;
     
-    // 表單資料
-    const form = ref({
-        title: '',
-        description: '',
-        author: '',
-        isPublic: false,
-        details: [
-            { word: '', word_description: '' }
-        ]
-    });
-
-    onMounted(async () => {
-        await $fetch(csrfURL, {
-            credentials: 'include'
-        });
-        form.value.author = user.username;
-        const data = await $fetch(`${apiBase}/flashCard/${id}`, {
-            method: 'GET',
-            credentials: 'include',
-            headers: {
-                'X-XSRF-TOKEN': useCookie('XSRF-TOKEN').value
-            }
-        });
-        form.value = data;
-    });
+    // 取得單字集資料
+    const { data: flashCardSet } = await useSanctumFetch(`${apiBase}/flashCard/${id}`);
 
     async function handleSubmit() {
-        if (form.value.details.length === 0) {
+        if (flashCardSet.value.details.length === 0) {
             alert('至少需要包含一個單字');
             return;
         }
@@ -62,7 +42,7 @@
                 headers: {
                     'X-XSRF-TOKEN': useCookie('XSRF-TOKEN').value
                 },
-                body: form.value
+                body: flashCardSet.value
             });
             alert('更新成功！');
             navigateTo(`/flashCard/${id}`);

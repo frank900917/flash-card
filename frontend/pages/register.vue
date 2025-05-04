@@ -33,7 +33,6 @@
 </template>
 
 <script setup>
-    const router = useRouter();
     const username = ref('');
     const password = ref('');
     const confirmPassword = ref('');
@@ -65,7 +64,7 @@
                 }
             });
         alert(response.message);
-        router.push('/login');
+        navigateTo('/login');
         } catch (error) {
             const backendErrors = error.response?._data?.errors;
             if (backendErrors) {

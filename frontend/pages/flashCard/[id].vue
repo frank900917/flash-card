@@ -1,15 +1,18 @@
 <template>
-    <div class="container-lg py-5">
+    <div v-if="flashCardSet" class="container-lg py-5">
         <div class="d-flex items-center justify-between">
             <h1 class="mb-4">{{ flashCardSet.title }}</h1>
             <div class="ms-auto">
-                <NuxtLink to="/account" v-if="user" class="btn btn-success align-self-center mx-2">
-                    返回帳戶
-                </NuxtLink>
                 <NuxtLink :to="{ name:'flashCard-edit-id', params: { id: id } }"
                 v-if="user?.id === flashCardSet.user_id"
                 class="btn btn-primary align-self-center mx-2">
                     編輯
+                </NuxtLink>
+                <button type="button" class="btn btn-danger align-self-center mx-2" @click="handleDelate">
+                    刪除
+                </button>
+                <NuxtLink to="/account" v-if="user" class="btn btn-success align-self-center mx-2">
+                    返回帳戶
                 </NuxtLink>
             </div>
         </div>
@@ -35,42 +38,34 @@
     </div>
 </template>
 
-<script setup>
+<script setup>    
     const route = useRoute();
-    const router = useRouter();
     const id = route.params.id;
-    const flashCardSet = ref({
-        title: '',
-        description: '',
-        public: false,
-        details: [
-            { word: '', word_description: '' }
-        ]
-    });
-    const { user, fetchUser } = useAuth();
+    const user = useSanctumUser();
     const { apiBase } = useRuntimeConfig().public;
     const { csrfURL } = useRuntimeConfig().public;
 
-    onMounted(async () => {
+    // 取得單字集資料
+    const { data: flashCardSet } = await useSanctumFetch(`${apiBase}/flashCard/${id}`);
+
+    async function handleDelate() {
         try {
-            // 取得單字集資料
+            const confirmed = confirm('確定要刪除此單字集嗎？')
+            if (!confirmed) return
+
             await $fetch(csrfURL, {
                 credentials: 'include'
             });
-            const data = await $fetch(`${apiBase}/flashCard/${id}`, {
-                method: 'GET',
+            await $fetch(`${apiBase}/flashCard/${id}`, {
+                method: 'DELETE',
                 credentials: 'include',
                 headers: {
                     'X-XSRF-TOKEN': useCookie('XSRF-TOKEN').value
                 }
             });
-            flashCardSet.value = data;
-            // 取得目前登入的使用者
-            fetchUser(); // 假設你的API是這樣
+            navigateTo('/account');
         } catch (error) {
-            console.error(error);
-            // 失敗就跳回列表
-            router.push('/');
+            alert(error);
         }
-    });
+    }
 </script>
