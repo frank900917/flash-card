@@ -45,4 +45,9 @@ class User extends Authenticatable
             'password' => 'hashed',
         ];
     }
+
+    public function flashCardSet()
+    {
+        return $this->hasMany(FlashCardSet::class);
+    }
 }

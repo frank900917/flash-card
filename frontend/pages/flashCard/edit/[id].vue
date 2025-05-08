@@ -8,7 +8,8 @@
             返回單字集
             </button>
         </div>
-        <FlashCardForm v-if="flashCardSet" :form="flashCardSet" :onSubmit="handleSubmit" :errors="errors"/>
+        <FlashCardForm v-if="flashCardSet" :author="user.username" :form="flashCardSet" :id="id"/>
+        <p v-if="error?.statusCode === 404" class="border rounded p-5 row justify-content-center fs-5 text-danger">此單字集不存在</p>
     </div>
 </template>
 
@@ -18,43 +19,11 @@
     });
 
     const route = useRoute()
-    const errors = ref({});
     const id = route.params.id;
     const { apiBase } = useRuntimeConfig().public;
-    const { csrfURL } = useRuntimeConfig().public;
+
+    const user = useSanctumUser();
     
     // 取得單字集資料
-    const { data: flashCardSet } = await useSanctumFetch(`${apiBase}/flashCard/${id}`);
-
-    async function handleSubmit() {
-        if (flashCardSet.value.details.length === 0) {
-            alert('至少需要包含一個單字');
-            return;
-        }
-        await $fetch(csrfURL, {
-            credentials: 'include'
-        });
-        errors.value = {};
-        try {
-            await $fetch(`${apiBase}/flashCard/${id}`, {
-                method: 'PUT',
-                credentials: 'include',
-                headers: {
-                    'X-XSRF-TOKEN': useCookie('XSRF-TOKEN').value
-                },
-                body: flashCardSet.value
-            });
-            alert('更新成功！');
-            navigateTo(`/flashCard/${id}`);
-        } catch (error) {
-            const backendErrors = error.response?._data?.errors;
-            if (backendErrors) {
-                for (const key in backendErrors) {
-                    errors.value[key] = backendErrors[key][0];
-                }
-            } else {
-                alert(error);
-            }
-        }
-    }
+    const { data: flashCardSet, error} = await useSanctumFetch(`${apiBase}/flashCard/${id}`);
 </script>

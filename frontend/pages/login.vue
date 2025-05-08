@@ -16,7 +16,7 @@
                     <div class="invalid-feedback">{{ errors.password }}</div>
                 </div>
 
-                <button type="submit" class="btn btn-primary w-100">登入</button>
+                <button type="submit" class="btn btn-primary w-100" :disabled="isSubmitting">登入</button>
 
                 <div class="text-center mt-3">
                 <NuxtLink to="/register" class="btn btn-outline-secondary w-100">還沒有帳號？註冊</NuxtLink>
@@ -31,9 +31,10 @@
     const username = ref('');
     const password = ref('');
     const errors = ref({});
+    const isSubmitting = ref(false);
 
     async function handleLogin() {
-        const user = useState('user', () => null);
+        isSubmitting.value = true;
         errors.value = {};
 
         try {
@@ -53,6 +54,7 @@
             } else {
                 alert(error);
             }
+            isSubmitting.value = false;
         }
     }
 </script>

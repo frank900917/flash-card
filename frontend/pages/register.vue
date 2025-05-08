@@ -22,7 +22,7 @@
                     <div class="invalid-feedback">{{ errors.confirmPassword }}</div>
                 </div>
 
-                <button type="submit" class="btn btn-primary w-100">建立帳號</button>
+                <button type="submit" class="btn btn-primary w-100" :disabled="isSubmitting">建立帳號</button>
 
                 <div class="text-center mt-3">
                     <NuxtLink to="/login" class="btn btn-outline-secondary w-100">已有帳號？登入</NuxtLink>
@@ -37,8 +37,10 @@
     const password = ref('');
     const confirmPassword = ref('');
     const errors = ref({});
+    const isSubmitting = ref(false);
     
     const handleRegister = async () => {
+        isSubmitting.value = true;
         errors.value = {};
         if (password.value !== confirmPassword.value) {
             errors.value.password = '密碼與確認密碼不一致';
@@ -77,6 +79,7 @@
             } else {
                 alert(error);
             }
+            isSubmitting.value = false;
         }
     }
 </script>

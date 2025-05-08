@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\FlashCardSet;
+use App\Http\Requests\FlashCardSetRequest;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -21,23 +22,9 @@ class FlashCardSetController extends Controller
         return response()->json($sets);
     }
 
-    public function store(Request $request)
+    public function store(FlashCardSetRequest $request)
     {
-        $validated = $request->validate([
-            'title' => 'required|string|max:255',
-            'description' => 'nullable|string',
-            'author' => 'required|string|max:255',
-            'isPublic' => 'required|boolean',
-            'details' => 'required|array|min:1',
-            'details.*.word' => 'required|string|max:255',
-            'details.*.word_description' => 'required|string'
-        ], [
-            'title.required' => '請輸入標題',
-            'title.max' => '標題長度不能超過 255 個字元',
-            'details.*.word.required' => '請輸入單字',
-            'details.*.word.max' => '單字長度不能超過 255 個字元',
-            'details.*.word_description.required' => '請輸入說明'
-        ]);
+        $validated = $request->validated();
 
         $set = FlashCardSet::create([
             'user_id' => Auth::id(),
@@ -71,23 +58,9 @@ class FlashCardSetController extends Controller
         return response()->json($set);
     }
 
-    public function update(Request $request, $id)
+    public function update(FlashCardSetRequest $request, $id)
     {
-        $validated = $request->validate([
-            'title' => 'required|string|max:255',
-            'description' => 'nullable|string',
-            'author' => 'required|string|max:255',
-            'isPublic' => 'required|boolean',
-            'details' => 'required|array|min:1',
-            'details.*.word' => 'required|string|max:255',
-            'details.*.word_description' => 'required|string'
-        ], [
-            'title.required' => '請輸入標題',
-            'title.max' => '標題長度不能超過 255 個字元',
-            'details.*.word.required' => '請輸入單字',
-            'details.*.word.max' => '單字長度不能超過 255 個字元',
-            'details.*.word_description.required' => '請輸入說明'
-        ]);
+        $validated = $request->validated();
 
         $set = FlashCardSet::where('user_id', Auth::id())->findOrFail($id);
 
