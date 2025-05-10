@@ -1,7 +1,7 @@
 <template>
     <div class="d-flex justify-content-center align-items-center vh-100 bg-body-secondary">
-        <div class="card shadow p-4" style="min-width: 350px; max-width: 400px;">
-            <h3 class="text-center mb-4">註冊</h3>
+        <div class="card shadow p-4" style="min-width: 350px;">
+            <h3 class="text-center mb-4 fw-bolder">註冊</h3>
             <form @submit.prevent="handleRegister">
                 <div class="mb-3">
                     <label for="username" class="form-label">使用者名稱</label>
@@ -38,9 +38,10 @@
     const confirmPassword = ref('');
     const errors = ref({});
     const isSubmitting = ref(false);
-    
+    const { apiBase } = useRuntimeConfig().public;
+    const { csrfURL } = useRuntimeConfig().public;
+
     const handleRegister = async () => {
-        isSubmitting.value = true;
         errors.value = {};
         if (password.value !== confirmPassword.value) {
             errors.value.password = '密碼與確認密碼不一致';
@@ -48,8 +49,8 @@
             return;
         }
 
-        const { apiBase } = useRuntimeConfig().public;
-        const { csrfURL } = useRuntimeConfig().public;
+        isSubmitting.value = true;
+        
         await $fetch(csrfURL, {
             credentials: 'include'
         });
@@ -62,7 +63,8 @@
                 },
                 body: {
                     username: username.value,
-                    password: password.value
+                    password: password.value,
+                    password_confirmation: confirmPassword.value
                 }
             });
         alert(response.message);

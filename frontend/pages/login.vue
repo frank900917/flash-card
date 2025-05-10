@@ -1,6 +1,6 @@
 <template>
     <div class="d-flex justify-content-center align-items-center vh-100 bg-body-secondary">
-        <div class="card shadow p-4" style="min-width: 350px; max-width: 400px;">
+        <div class="card shadow p-4" style="min-width: 350px;">
             <h3 class="text-center mb-4 fw-bolder">登入</h3>
             <form @submit.prevent="handleLogin">
                 <div class="mb-3">

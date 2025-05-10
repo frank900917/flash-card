@@ -216,9 +216,9 @@
     const { apiBase } = useRuntimeConfig().public;
     const { csrfURL } = useRuntimeConfig().public;
     async function handleSubmit() {
-        // if (!validate()) {
-        //     return false;
-        // }
+        if (!validate()) {
+            return false;
+        }
 
         form.author = author;
         await $fetch(csrfURL, {
