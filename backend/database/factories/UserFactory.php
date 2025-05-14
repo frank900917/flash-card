@@ -13,8 +13,8 @@ class UserFactory extends Factory
         return [
             'username' => fake()->unique()->regexify('[a-zA-Z0-9]{8,20}'),
             'password' => Hash::make('abcd1234'),
-            'created_at' => now(),
-            'updated_at' => now()
+            'created_at' => fake()->dateTimeBetween('-1 year'),
+            'updated_at' => fn (array $attributes) => $attributes['created_at']
         ];
     }
 }

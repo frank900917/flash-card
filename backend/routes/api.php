@@ -11,6 +11,6 @@ Route::post('/login', [AuthController::class, 'login']);
 Route::post('/logout', [AuthController::class, 'logout']);
 Route::post('/changePassword', [AuthController::class, 'changePassword'])->middleware('auth:sanctum');
 
-Route::get('/public', [FlashCardSetController::class, 'publicSets']);
-
-Route::middleware('auth:sanctum')->apiResource('/flashCard', FlashCardSetController::class);
+Route::apiResource('/flashCard', FlashCardSetController::class)->middleware('auth:sanctum')->except(['show']);
+Route::get('/flashCard/{id}', [FlashCardSetController::class, 'show']);
+Route::get('/public', [FlashCardSetController::class, 'publicIndex']);

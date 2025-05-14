@@ -8,11 +8,15 @@
                 class="btn btn-primary m-2 align-self-center">
                     編輯
                 </NuxtLink>
-                <button type="button" class="btn btn-danger m-2 align-self-center" @click="handleDelate" :disabled="isSubmitting">
+                <button v-if="user?.id === flashCardSet.user_id" type="button" 
+                class="btn btn-danger m-2 align-self-center" @click="handleDelate" :disabled="isSubmitting">
                     刪除
                 </button>
-                <NuxtLink to="/account" v-if="user" class="btn btn-success m-2 align-self-center">
+                <NuxtLink to="/account" v-if="route.query.from === 'account'" class="btn btn-success m-2 align-self-center">
                     返回帳戶
+                </NuxtLink>
+                <NuxtLink to="/public" v-else class="btn btn-success m-2 align-self-center">
+                    返回
                 </NuxtLink>
             </div>
         </div>
@@ -54,9 +58,14 @@
     const perPage = ref(25);
     const { apiBase } = useRuntimeConfig().public;
     const { csrfURL } = useRuntimeConfig().public;
-
+    
     // 取得單字集資料
     const { data: flashCardSet , error } = await useSanctumFetch(`${apiBase}/flashCard/${id}?page=${page.value}&perPage=${perPage.value}`);
+    if (error.value?.statusCode === 404) {
+        throw createError({ statusCode: 404, statusMessage: '此單字集不存在' });
+    } else if (error.value?.statusCode === 403) {
+        throw createError({ statusCode: 403, statusMessage: '此單字集為私人單字集' });
+    }
 
     // 更新單字集清單
     async function fetchFlashCardSet(isPerPage) {
@@ -70,6 +79,7 @@
         flashCardSet.value = data;
     }
 
+    // 刪除單字集
     async function handleDelate() {
         try {
             const confirmed = confirm('確定要刪除此單字集嗎？')

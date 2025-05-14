@@ -1,6 +1,5 @@
 <template>
-    <NuxtLink :to="{ name:'flashCard-id', params: { id: flashCardSet.id } }"
-    class="d-flex mb-3 text-decoration-none text-dark border border-2 rounded-3 row">
+    <NuxtLink :to="backPath" class="d-flex mb-3 text-decoration-none text-dark border border-2 rounded-3 row">
         <div class="col-lg-8 col-sm-6 p-3">
             <div class="fw-bold text-truncate">{{ flashCardSet.title }}</div>
             <div class="text-muted text-truncate">{{ flashCardSet.description }}</div>
@@ -19,18 +18,25 @@
 </template>
 
 <script setup>
-    const { flashCardSet } = defineProps(['flashCardSet'])
-
+    const { flashCardSet, isFormAccount } = defineProps({
+        flashCardSet: Object,
+        isFormAccount: Boolean
+    });
+    
     // 格式化時間
     function formatDate(dateStr) {
         const date = new Date(dateStr)
         return date.toLocaleDateString()
     }
 
-    // 隱藏作者中間部分
-    // function maskedAuthor(author) {
-    //     return author.slice(0, 3) + '***' + author.slice(-3)
-    // }
+    // 返回路徑
+    const backPath = computed(() => {
+        if (isFormAccount) {
+            return { name:'flashCard-id', params: { id: flashCardSet.id }, query: { from: 'account' } }
+        } else {
+            return { name:'flashCard-id', params: { id: flashCardSet.id } }
+        }
+    })
 </script>
 
 <style scoped>

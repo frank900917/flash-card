@@ -19,11 +19,13 @@ class FlashCardSetFactory extends Factory
     public function definition(): array
     {
         return [
-            'title' => $this->faker->sentence(rand(3, 10)), // 隨機標題（3-10 個單字）
-            'description' => $this->faker->optional(0.7)->paragraph(), // 70% 機率有描述
-            'author' => fn (array $attributes) => User::find($attributes['user_id'])->username,
-            'isPublic' => $this->faker->boolean(), // 隨機公開狀態
-            'user_id' => User::factory(), // 關聯使用者（在 Seeder 中覆蓋）
+            'user_id' => User::factory(), // 關聯使用者
+            'title' => fake()->sentence(rand(3, 10)), // 隨機標題（3-10 個單字）
+            'description' => fake()->optional(0.7)->paragraph(), // 70% 機率有描述
+            'author' => fn (array $attributes) => User::find($attributes['user_id'])->username, // 同使用者帳戶
+            'isPublic' => fake()->boolean(), // 隨機公開狀態
+            'created_at' => fn (array $attributes) => fake()->dateTimeBetween(User::find($attributes['user_id'])->created_at), // 隨機建立時間（大於帳戶建立時間）
+            'updated_at' => fn (array $attributes) => $attributes['created_at'], // 同建立時間
         ];
     }
 
@@ -47,8 +49,8 @@ class FlashCardSetFactory extends Factory
                     'flash_card_set_id' => $flashCardSet->id,
                     'word' => $word,
                     'word_description' => fake()->sentence(rand(5, 20)),
-                    'created_at' => now(),
-                    'updated_at' => now(),
+                    'created_at' => $flashCardSet->created_at,
+                    'updated_at' => $flashCardSet->created_at,
                 ];
             }
 

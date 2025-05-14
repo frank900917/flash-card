@@ -13,19 +13,20 @@ class FlashCardSetController extends Controller
     // 我的單字集清單
     public function index(Request $request)
     {
-        // $sets = User::where('id', Auth::id())
-        //             ->with(['flashCardSet' => fn ($query) => $query->withCount('details')->latest()])
-        //             ->get();
         $perPage = $request->input('perPage', 25);
+        $search = $request->input('search');
 
         $sets = FlashCardSet::select('id', 'title', 'description', 'author', 'isPublic', 'updated_at')
                             ->where('user_id', Auth::id())
+                            ->when($search, fn ($query) => $query->where('title', 'LIKE', '%' . $search . '%'))
                             ->withCount('details')
                             ->latest()
                             ->paginate($perPage);
+        
         if (!$sets) {
             return response()->json(['message' => 'Not Found'], 404);
         }
+        
         return response()->json($sets);
     }
 
@@ -62,9 +63,13 @@ class FlashCardSetController extends Controller
         
         if ($perPage) {
             // 檢視單字集
-            $set = FlashCardSet::where('id', $id)
-                               ->where('user_id', Auth::id())
-                               ->firstOrFail();
+            $set = FlashCardSet::where('id', $id)->firstOrFail();
+
+            // 私人單字集 且 未登入或非擁有者
+            if (!$set->isPublic && (!Auth::check() || Auth::id() !== $set->user_id)) {
+                return response()->json(['message' => 'Forbidden'], 403);
+            }
+            
             $details = $set->details()->select('word', 'word_description')->paginate($perPage);
             $set->details = $details;
         } else {
@@ -127,13 +132,28 @@ class FlashCardSetController extends Controller
         ]);
     }
 
-    public function publicSets()
+    // 公開單字集清單
+    public function publicIndex(Request $request)
     {
-        $sets = FlashCardSet::where('public', true)->with('details')->get();
+        $search = $request->input('search');
+        $perPage = $request->input('perPage', 25);
+
+        $sets = FlashCardSet::select('id', 'title', 'description', 'author', 'isPublic', 'updated_at')
+                            ->where('isPublic', true)
+                            ->when($search, fn ($query) => $query->where('title', 'LIKE', '%' . $search . '%'))
+                            ->withCount('details')
+                            ->latest()
+                            ->paginate($perPage);
 
         if (!$sets) {
             return response()->json(['message' => 'Not Found'], 404);
         }
+
+        // 遮蔽作者，只顯示前後各3個字元
+        $sets->getCollection()->transform(function ($item) {
+            $item->author = substr($item->author, 0, 3) . '***' . substr($item->author, -3);
+            return $item;
+        });
 
         return response()->json($sets);
     }

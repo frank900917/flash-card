@@ -62,7 +62,4 @@
         }
         return pages;
     });
-    console.log(startPage.value)
-    console.log(endPage.value)
-    console.log(middlePages.value)
 </script>

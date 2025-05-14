@@ -22,7 +22,7 @@
             <button type="button" class="btn btn-outline-primary align-self-center mx-2" data-bs-toggle="modal" data-bs-target="#importModal">
                 導入單字
             </button>
-            <button type="submit" class="btn btn-primary align-self-center mx-2" :disabled="isSubmitting">保存</button>
+            <button type="submit" class="btn btn-primary align-self-center mx-2" :disabled="isSubmitting || form.details.length === 0">保存</button>
         </div>
 
 
@@ -46,6 +46,7 @@
                 </div>
             </div>
         </div>
+        <div v-if="form.details.length === 0" class="text-danger text-center my-3">至少需要新增一個單字</div>
 
         <div class="d-flex justify-content-center mb-4">
             <button type="button" class="btn btn-outline-success" @click="addDetail">
@@ -54,7 +55,7 @@
         </div>
 
         <div class="d-flex justify-content-center">
-            <button type="submit" class="btn btn-primary" :disabled="isSubmitting">保存</button>
+            <button type="submit" class="btn btn-primary" :disabled="isSubmitting || form.details.length === 0">保存</button>
         </div>
     </form>
 
@@ -89,6 +90,7 @@
     });
     const errors = ref({});
     const isSubmitting = ref(false);
+    const { $bootstrap } = useNuxtApp();
     
     // 新增單字欄
     function addDetail () {
@@ -131,10 +133,9 @@
     }
 
     // 導入單字確認處理
-    const { $bootstrap } = useNuxtApp();
     function handleBulk () {
-        const modal = $bootstrap.Modal.getInstance(document.getElementById('importModal'));
-        modal.hide();
+        const importModal = $bootstrap.Modal.getInstance(document.getElementById('importModal'));
+        importModal.hide();
         while (form.details.length > 0) {
             const last = form.details[form.details.length - 1];
             if (last.word === '' && last.word_description === '') {
@@ -157,7 +158,6 @@
         errors.value = {};
 
         if (form.details.length === 0) {
-            alert('至少需要新增一個單字');
             return false;
         }
 
@@ -228,7 +228,7 @@
         try {
             isSubmitting.value = true;
             if (!id) {
-                await $fetch(`${apiBase}/flashCard`, {
+                const data = await $fetch(`${apiBase}/flashCard`, {
                     method: 'POST',
                     credentials: 'include',
                     headers: {
@@ -236,8 +236,7 @@
                     },
                     body: form
                 });
-                alert('建立成功');
-                navigateTo('/account');
+                navigateTo(`/flashCard/${data.data.id}`);
             } else {
                 await $fetch(`${apiBase}/flashCard/${id}`, {
                     method: 'PUT',
@@ -247,7 +246,6 @@
                     },
                     body: form
                 });
-                alert('更新成功！');
                 navigateTo(`/flashCard/${id}`);
             }
         } catch (error) {
