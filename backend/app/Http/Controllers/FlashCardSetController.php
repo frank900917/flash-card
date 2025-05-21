@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 // use App\Models\User;
 use App\Models\FlashCardSet;
+use App\Models\FlashCardSetDetail;
 use App\Http\Requests\FlashCardSetRequest;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -59,9 +60,16 @@ class FlashCardSetController extends Controller
     // 檢視&編輯單字集
     public function show(Request $request, $id)
     {
+        $type = $request->input('type');
         $perPage = $request->input('perPage');
-        
-        if ($perPage) {
+
+        if ($type === 'edit') {
+            // 編輯單字集
+            $set = FlashCardSet::where('id', $id)
+                               ->where('user_id', Auth::id())
+                               ->with(['details' => fn ($query) => $query->select('flash_card_set_id', 'word', 'word_description')])
+                               ->firstOrFail();
+        } else {
             // 檢視單字集
             $set = FlashCardSet::where('id', $id)->firstOrFail();
 
@@ -69,15 +77,13 @@ class FlashCardSetController extends Controller
             if (!$set->isPublic && (!Auth::check() || Auth::id() !== $set->user_id)) {
                 return response()->json(['message' => 'Forbidden'], 403);
             }
-            
-            $details = $set->details()->select('word', 'word_description')->paginate($perPage);
-            $set->details = $details;
-        } else {
-            // 編輯單字集
-            $set = FlashCardSet::where('id', $id)
-                               ->where('user_id', Auth::id())
-                               ->with(['details' => fn ($query) => $query->select('flash_card_set_id', 'word', 'word_description')])
-                               ->firstOrFail();
+
+            if ($type === 'show') {
+                $details = $set->details()->select('word', 'word_description')->paginate($perPage);
+                $set->details = $details;
+            } elseif ($type === 'quiz') {
+                $set = FlashCardSetDetail::where('flash_card_set_id', $id)->select('word', 'word_description')->get();
+            }
         }
         
         if (!$set) {

@@ -75,6 +75,7 @@
                     </div>
                 </div>
                 <div class="modal-footer justify-content-center">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
                     <button type="button" class="btn btn-primary" data-bs-dismiss="modal" @click="handleBulk">確定</button>
                 </div>
             </div>
@@ -205,9 +206,9 @@
             return false; 
         });
     
-    if (wordError) {
-        return false; 
-    }
+        if (wordError) {
+            return false; 
+        }
 
         return true;
     }
@@ -219,14 +220,12 @@
         if (!validate()) {
             return false;
         }
-
+        isSubmitting.value = true;
         form.author = author;
         await $fetch(csrfURL, {
             credentials: 'include'
         });
-        errors.value = {};
         try {
-            isSubmitting.value = true;
             if (!id) {
                 const data = await $fetch(`${apiBase}/flashCard`, {
                     method: 'POST',

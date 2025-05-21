@@ -22,12 +22,26 @@
                     <div class="invalid-feedback">{{ errors.confirmPassword }}</div>
                 </div>
 
-                <button type="submit" class="btn btn-primary w-100" :disabled="isSubmitting">建立帳號</button>
+                <button type="button" class="btn btn-primary w-100" :disabled="isSubmitting">建立帳號</button>
 
                 <div class="text-center mt-3">
                     <NuxtLink to="/login" class="btn btn-outline-secondary w-100">已有帳號？登入</NuxtLink>
                 </div>
             </form>
+        </div>
+    </div>
+    <div class="modal fade" id="infoModal" tabindex="-1" aria-labelledby="infoModalLabel" aria-hidden="true" style="display: none !important;">
+        <div class="modal-dialog modal-sm">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="infoModalLabel">訊息</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">註冊成功</div>
+                <div class="modal-footer justify-content-center">
+                    <button type="button" class="btn btn-primary" data-bs-dismiss="modal">確定</button>
+                </div>
+            </div>
         </div>
     </div>
 </template>
@@ -38,17 +52,47 @@
     const confirmPassword = ref('');
     const errors = ref({});
     const isSubmitting = ref(false);
+    const { $bootstrap } = useNuxtApp();
     const { apiBase } = useRuntimeConfig().public;
     const { csrfURL } = useRuntimeConfig().public;
 
-    const handleRegister = async () => {
+    // 註冊驗證
+    function validate() {
         errors.value = {};
+
+        if (username.value.length < 8) {
+            errors.value.username = '帳號長度至少需 8 個字元';
+            return false;
+        }
+
+        if (username.value.length > 20) {
+            errors.value.username = '帳號長度不能超過 20 個字元';
+            return false;
+        }
+
+        if (password.value.length < 8) {
+            errors.value.password = '密碼長度至少需 8 個字元';
+            return false;
+        }
+
+        if (password.value.length > 20) {
+            errors.value.password = '密碼長度不能超過 20 個字元';
+            return false;
+        }
+
         if (password.value !== confirmPassword.value) {
             errors.value.password = '密碼與確認密碼不一致';
             errors.value.confirmPassword = '密碼與確認密碼不一致';
-            return;
+            return false;
         }
+        return true;
+    }
 
+    const handleRegister = async () => {
+        if (!validate()) {
+            return false;
+        }
+        
         isSubmitting.value = true;
         
         await $fetch(csrfURL, {
@@ -67,8 +111,12 @@
                     password_confirmation: confirmPassword.value
                 }
             });
-        alert(response.message);
-        navigateTo('/login');
+            const infoModalEl = document.getElementById('infoModal');
+            const infoModal = new $bootstrap.Modal(infoModalEl);
+            infoModal.show();
+            infoModalEl.addEventListener('hidden.bs.modal', function () {
+                navigateTo('/login');
+            })
         } catch (error) {
             const backendErrors = error.response?._data?.errors;
             if (backendErrors) {

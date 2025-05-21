@@ -28,12 +28,26 @@
             </form>
         </div>
     </div>
+    <div class="modal fade" id="infoModal" tabindex="-1" aria-labelledby="infoModalLabel" aria-hidden="true" style="display: none !important;">
+        <div class="modal-dialog modal-sm">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="infoModalLabel">訊息</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">密碼變更成功，請重新登入</div>
+                <div class="modal-footer justify-content-center">
+                    <button type="submit" class="btn btn-primary" data-bs-dismiss="modal">確定</button>
+                </div>
+            </div>
+        </div>
+    </div>
 </template>
 <script setup>
     definePageMeta({
         middleware: ['sanctum:auth']
     });
-
+    const { $bootstrap } = useNuxtApp();
     const { apiBase } = useRuntimeConfig().public;
     const { csrfURL } = useRuntimeConfig().public;
     const form = reactive({
@@ -66,8 +80,12 @@
                     'X-XSRF-TOKEN': useCookie('XSRF-TOKEN').value
                 }
             });
-            alert('密碼變更成功，請重新登入');
-            useSanctumAuth().logout();
+            const infoModalEl = document.getElementById('infoModal');
+            const infoModal = new $bootstrap.Modal(infoModalEl);
+            infoModal.show();
+            infoModalEl.addEventListener('hidden.bs.modal', function () {
+                useSanctumAuth().logout();
+            })
         } catch (error) {
             const backendErrors = error.response?._data?.errors;
             if (backendErrors) {

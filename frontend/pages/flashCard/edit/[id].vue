@@ -25,5 +25,5 @@
     const user = useSanctumUser();
     
     // 取得單字集資料
-    const { data: flashCardSet, error} = await useSanctumFetch(`${apiBase}/flashCard/${id}`);
+    const { data: flashCardSet, error} = await useSanctumFetch(`${apiBase}/flashCard/${id}?type=edit`);
 </script>

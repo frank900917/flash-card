@@ -42,14 +42,12 @@ class AuthController extends Controller
     {
         $request->validate([
             'username' => 'required|string|min:8|max:20',
-            'password' => 'required|string|min:8|max:20'
+            'password' => 'required|string'
         ], [
             'username.required' => '請輸入帳號',
             'username.min' => '帳號長度至少需 8 個字元',
             'username.max' => '帳號長度不能超過 20 個字元',
-            'password.required' => '請輸入密碼',
-            'password.min' => '密碼長度需至少 8 個字元',
-            'password.max' => '密碼長度不能超過 20 個字元',
+            'password.required' => '請輸入密碼'
         ]);
 
         if (!Auth::attempt($request->only('username', 'password'))) {

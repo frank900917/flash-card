@@ -33,9 +33,28 @@
     const errors = ref({});
     const isSubmitting = ref(false);
 
-    async function handleLogin() {
-        isSubmitting.value = true;
+    // 登入驗證
+    function validate() {
         errors.value = {};
+
+        if (username.value.length < 8) {
+            errors.value.username = '帳號長度至少需 8 個字元';
+            return false;
+        }
+
+        if (username.value.length > 20) {
+            errors.value.username = '帳號長度不能超過 20 個字元';
+            return false;
+        }
+        return true;
+    }
+
+    async function handleLogin() {
+        if (!validate()) {
+            return false;
+        }
+
+        isSubmitting.value = true;
 
         try {
             const userCredentials = {
