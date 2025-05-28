@@ -227,6 +227,7 @@
         });
         try {
             if (!id) {
+                // 新增單字集
                 const data = await $fetch(`${apiBase}/flashCard`, {
                     method: 'POST',
                     credentials: 'include',
@@ -235,8 +236,9 @@
                     },
                     body: form
                 });
-                navigateTo(`/flashCard/${data.data.id}`);
+                navigateTo(`/flashCard/${data.data.id}?from=account`);
             } else {
+                // 編輯單字集
                 await $fetch(`${apiBase}/flashCard/${id}`, {
                     method: 'PUT',
                     credentials: 'include',
@@ -245,7 +247,7 @@
                     },
                     body: form
                 });
-                navigateTo(`/flashCard/${id}`);
+                navigateTo(`/flashCard/${id}?from=account`);
             }
         } catch (error) {
             const backendErrors = error.response?._data?.errors;

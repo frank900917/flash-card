@@ -1,6 +1,5 @@
 <?php
 
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\FlashCardSetController;
@@ -13,4 +12,6 @@ Route::post('/changePassword', [AuthController::class, 'changePassword'])->middl
 
 Route::apiResource('/flashCard', FlashCardSetController::class)->middleware('auth:sanctum')->except(['show']);
 Route::get('/flashCard/{id}', [FlashCardSetController::class, 'show']);
+Route::get('/flashCard/details/{id}', [FlashCardSetController::class, 'showDetails']);
+Route::get('/flashCard/edit/{id}', [FlashCardSetController::class, 'edit'])->middleware('auth:sanctum');
 Route::get('/public', [FlashCardSetController::class, 'publicIndex']);

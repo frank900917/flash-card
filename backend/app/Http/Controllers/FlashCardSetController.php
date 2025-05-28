@@ -58,40 +58,96 @@ class FlashCardSetController extends Controller
     }
 
     // 檢視&編輯單字集
+    // public function show(Request $request, $id)
+    // {
+    //     $type = $request->input('type');
+    //     $perPage = $request->input('perPage');
+
+    //     if ($type === 'edit') {
+    //         // 編輯單字集
+    //         $set = FlashCardSet::where('id', $id)
+    //                            ->where('user_id', Auth::id())
+    //                            ->with(['details' => fn ($query) => $query->select('flash_card_set_id', 'word', 'word_description')])
+    //                            ->firstOrFail();
+    //     } else {
+    //         // 檢視單字集
+    //         $set = FlashCardSet::where('id', $id)->firstOrFail();
+
+    //         // 私人單字集 且 未登入或非擁有者
+    //         if (!$set->isPublic && (!Auth::check() || Auth::id() !== $set->user_id)) {
+    //             return response()->json(['message' => 'Forbidden'], 403);
+    //         }
+
+    //         if ($type === 'show') {
+    //             $details = $set->details()->select('word', 'word_description')->paginate($perPage);
+    //             $set->details = $details;
+    //         } elseif ($type === 'quiz') {
+    //             $set = FlashCardSetDetail::where('flash_card_set_id', $id)->select('word', 'word_description')->get();
+    //         }
+    //     }
+        
+    //     if (!$set) {
+    //         return response()->json(['message' => 'Not Found'], 404);
+    //     }
+
+    //     return response()->json($set);
+    // }
+
+    // 檢視單字集
     public function show(Request $request, $id)
     {
-        $type = $request->input('type');
         $perPage = $request->input('perPage');
 
-        if ($type === 'edit') {
-            // 編輯單字集
-            $set = FlashCardSet::where('id', $id)
-                               ->where('user_id', Auth::id())
-                               ->with(['details' => fn ($query) => $query->select('flash_card_set_id', 'word', 'word_description')])
-                               ->firstOrFail();
-        } else {
-            // 檢視單字集
-            $set = FlashCardSet::where('id', $id)->firstOrFail();
+        $set = FlashCardSet::where('id', $id)->firstOrFail();
 
-            // 私人單字集 且 未登入或非擁有者
-            if (!$set->isPublic && (!Auth::check() || Auth::id() !== $set->user_id)) {
-                return response()->json(['message' => 'Forbidden'], 403);
-            }
-
-            if ($type === 'show') {
-                $details = $set->details()->select('word', 'word_description')->paginate($perPage);
-                $set->details = $details;
-            } elseif ($type === 'quiz') {
-                $set = FlashCardSetDetail::where('flash_card_set_id', $id)->select('word', 'word_description')->get();
-            }
+        if (!$set) {
+            return response()->json(['message' => 'Not Found'], 404);
         }
-        
+
+        if (!$set->isPublic && (!Auth::check() || Auth::id() !== $set->user_id)) {
+            return response()->json(['message' => 'Forbidden'], 403);
+        }
+
+        $details = $set->details()->select('word', 'word_description')->paginate($perPage);
+        $set->details = $details;
+
+        return response()->json($set);
+    }
+
+    // 檢視單字集所有單字
+    public function showDetails(Request $request, $id)
+    {
+        $set = FlashCardSet::where('id', $id)->firstOrFail();
+
+        if (!$set) {
+            return response()->json(['message' => 'Not Found'], 404);
+        }
+
+        // 私人單字集 且 未登入或非擁有者
+        if (!$set->isPublic && (!Auth::check() || Auth::id() !== $set->user_id)) {
+            return response()->json(['message' => 'Forbidden'], 403);
+        }
+
+        $set = FlashCardSetDetail::where('flash_card_set_id', $id)->select('word', 'word_description')->get();
+
+        return response()->json($set);
+    }
+
+    // 編輯單字集
+    public function edit($id)
+    {
+        $set = FlashCardSet::where('id', $id)
+                           ->where('user_id', Auth::id())
+                           ->with(['details' => fn ($query) => $query->select('flash_card_set_id', 'word', 'word_description')])
+                           ->firstOrFail();
+
         if (!$set) {
             return response()->json(['message' => 'Not Found'], 404);
         }
 
         return response()->json($set);
     }
+
 
     // 更新單字集
     public function update(FlashCardSetRequest $request, $id)

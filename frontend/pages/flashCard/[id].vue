@@ -43,7 +43,18 @@
                 </div>
                 <div v-for="(detail, index) in flashCardSet.details.data" :key="index" class="d-flex items-center my-2 border rounded-3">
                     <div class="col-1 p-3 d-flex align-items-center justify-content-center">{{ index + flashCardSet.details.from }}</div>
-                    <div class="col-4 p-3 border-start d-flex align-items-center">{{ detail.word }}</div>
+                    <div class="col-4 p-3 border-start d-flex align-items-center">
+                        <button type="button" class="btn p-0 d-flex align-items-center" @click="speak(detail.word)">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" class="bi bi-volume-up-fill" viewBox="0 0 16 16">
+                                <path d="M11.536 14.01A8.47 8.47 0 0 0 14.026 8a8.47 8.47 0 0 0-2.49-6.01l-.708.707A7.48 7.48 0 0 1 13.025 8c0 2.071-.84 3.946-2.197 5.303z"/>
+                                <path d="M10.121 12.596A6.48 6.48 0 0 0 12.025 8a6.48 6.48 0 0 0-1.904-4.596l-.707.707A5.48 5.48 0 0 1 11.025 8a5.48 5.48 0 0 1-1.61 3.89z"/>
+                                <path d="M8.707 11.182A4.5 4.5 0 0 0 10.025 8a4.5 4.5 0 0 0-1.318-3.182L8 5.525A3.5 3.5 0 0 1 9.025 8 3.5 3.5 0 0 1 8 10.475zM6.717 3.55A.5.5 0 0 1 7 4v8a.5.5 0 0 1-.812.39L3.825 10.5H1.5A.5.5 0 0 1 1 10V6a.5.5 0 0 1 .5-.5h2.325l2.363-1.89a.5.5 0 0 1 .529-.06"/>
+                            </svg>
+                            <div class="text-start">
+                                {{ detail.word }}
+                            </div>
+                        </button>
+                    </div>
                     <div class="col-7 p-3 border-start d-flex align-items-center">{{ detail.word_description }}</div>
                 </div>
             </div>
@@ -58,27 +69,52 @@
             <div class="space-y-4 mt-6" >
                 <div class="d-flex mt-3 fw-bold">
                     <div class="col-1"></div>
-                    <div class="col-4 d-flex justify-content-center">單字</div>
-                    <div class="col-7 d-flex justify-content-center">說明</div>
+                    <template v-if="quizType === 'listening'">
+                        <div class="col-1 d-flex justify-content-center">聽力</div>
+                        <div class="col-4 d-flex justify-content-center">單字</div>
+                        <div class="col-6 d-flex justify-content-center">說明</div>
+                    </template>
+                    <template v-else>
+                        <div class="col-4 d-flex justify-content-center">單字</div>
+                        <div class="col-7 d-flex justify-content-center">說明</div>
+                    </template>
                 </div>
                 <div v-for="(item, index) in quizData" :key="index" class="d-flex items-center my-2 border rounded-3">
                     <div class="col-1 p-3 d-flex align-items-center justify-content-center">{{ index + 1 }}</div>
+                    <template v-if="quizType === 'listening'">
+                        <div class="col-1 p-3 border-start d-flex align-items-center justify-content-center">
+                            <button type="button" class="btn p-0" @click="speak(item.word)">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" class="bi bi-volume-up-fill" viewBox="0 0 16 16">
+                                    <path d="M11.536 14.01A8.47 8.47 0 0 0 14.026 8a8.47 8.47 0 0 0-2.49-6.01l-.708.707A7.48 7.48 0 0 1 13.025 8c0 2.071-.84 3.946-2.197 5.303z"/>
+                                    <path d="M10.121 12.596A6.48 6.48 0 0 0 12.025 8a6.48 6.48 0 0 0-1.904-4.596l-.707.707A5.48 5.48 0 0 1 11.025 8a5.48 5.48 0 0 1-1.61 3.89z"/>
+                                    <path d="M8.707 11.182A4.5 4.5 0 0 0 10.025 8a4.5 4.5 0 0 0-1.318-3.182L8 5.525A3.5 3.5 0 0 1 9.025 8 3.5 3.5 0 0 1 8 10.475zM6.717 3.55A.5.5 0 0 1 7 4v8a.5.5 0 0 1-.812.39L3.825 10.5H1.5A.5.5 0 0 1 1 10V6a.5.5 0 0 1 .5-.5h2.325l2.363-1.89a.5.5 0 0 1 .529-.06"/>
+                                </svg>
+                            </button>
+                        </div>
+                    </template>
                     <div class="col-4 p-3 border-start d-flex align-items-center">
-                        <template v-if="quizType === 'word'">
-                            <input v-model="item.answer" type="text" class="form-control" placeholder="輸入單字" />
+                        <template v-if="quizType === 'word' || quizType === 'listening'">
+                            <input v-model="item.wordAnswer" type="text" class="form-control" placeholder="輸入單字" />
                         </template>
                         <template v-else>
                             {{ item.word }}
                         </template>
                     </div>
-                    <div class="col-7 p-3 border-start d-flex align-items-center">
-                        <template v-if="quizType === 'description'">
-                            <input v-model="item.answer" type="text" class="form-control" placeholder="輸入說明" />
-                        </template>
-                        <template v-else>
-                            {{ item.word_description }}
-                        </template>
-                    </div>
+                    <template v-if="quizType === 'listening'">
+                        <div class="col-6 p-3 border-start d-flex align-items-center">
+                            <input v-model="item.descriptionAnswer" type="text" class="form-control" placeholder="輸入說明" />
+                        </div>
+                    </template>
+                    <template v-else>
+                        <div class="col-7 p-3 border-start d-flex align-items-center">
+                            <template v-if="quizType === 'description'">
+                                <input v-model="item.descriptionAnswer" type="text" class="form-control" placeholder="輸入說明" />
+                            </template>
+                            <template v-else>
+                                {{ item.word_description }}
+                            </template>
+                        </div>
+                    </template>
                 </div>
                 <div class="d-flex justify-content-center">
                     <button type="submit" class="btn btn-info m-2">完成測驗</button>
@@ -107,13 +143,21 @@
                         <div class="col-4 d-flex justify-content-center">說明</div>
                         <div class="col-4 d-flex justify-content-center">你的回答</div>
                     </template>
+                    <template v-if="quizType === 'listening'">
+                        <div class="col-2 d-flex justify-content-center">單字</div>
+                        <div class="col-2 d-flex justify-content-center">你的回答</div>
+                        <div class="col-7 d-flex">
+                            <div class="col-6 d-flex justify-content-center">說明</div>
+                            <div class="col-6 d-flex justify-content-center">你的回答</div>
+                        </div>
+                    </template>
                 </div>
                 <div v-for="(item, index) in quizData" :key="index" class="d-flex items-center my-2 border rounded-3">
                     <div class="col-1 p-3 d-flex align-items-center justify-content-center">{{ index + 1 }}</div>
                     <template v-if="quizType === 'word'">
                         <div class="col-2 p-3 border-start d-flex align-items-center">{{ item.word }}</div>
                         <div class="col-2 p-3 border-start d-flex align-items-center">
-                            <div :class="item.isCorrect ? 'text-success' : 'text-danger'">{{ item.answer }}</div>
+                            <div :class="item.isWordCorrect ? 'text-success' : 'text-danger'">{{ item.answer }}</div>
                         </div>
                         <div class="col-7 p-3 border-start d-flex align-items-center">{{ item.word_description }}</div>
                     </template>
@@ -121,7 +165,19 @@
                         <div class="col-3 p-3 border-start d-flex align-items-center">{{ item.word }}</div>
                         <div class="col-4 p-3 border-start d-flex align-items-center">{{ item.word_description }}</div>
                         <div class="col-4 p-3 border-start d-flex align-items-center">
-                            <div :class="item.isCorrect ? 'text-success' : 'text-danger'">{{ item.answer }}</div>
+                            <div :class="item.isDescriptionCorrect ? 'text-success' : 'text-danger'">{{ item.answer }}</div>
+                        </div>
+                    </template>
+                    <template v-if="quizType === 'listening'">
+                        <div class="col-2 p-3 border-start d-flex align-items-center">{{ item.word }}</div>
+                        <div class="col-2 p-3 border-start d-flex align-items-center">
+                            <div :class="item.isWordCorrect ? 'text-success' : 'text-danger'">{{ item.answer.word }}</div>
+                        </div>
+                        <div class="col-7 d-flex">
+                            <div class="col-6 p-3 border-start d-flex align-items-center">{{ item.word_description }}</div>
+                            <div class="col-6 p-3 border-start d-flex align-items-center">
+                                <div :class="item.isDescriptionCorrect ? 'text-success' : 'text-danger'">{{ item.answer.description }}</div>
+                            </div>
                         </div>
                     </template>
                 </div>
@@ -172,6 +228,11 @@
                                 :class="{ 'is-invalid': errors.quizType }">
                                 <label for="descriptionCheckbox">說明</label>
                             </div>
+                            <div class="form-check form-check-inline">
+                                <input class="form-check-input" type="radio" name="quizType" id="listeningCheckbox" value="listening"
+                                :class="{ 'is-invalid': errors.quizType }">
+                                <label for="listeningCheckbox">聽力</label>
+                            </div>
                             <div class="text-danger">{{ errors.quizType }}</div>
                         </div>
                         <div>
@@ -202,13 +263,15 @@
     const quizState = ref(0);
     const quizData = ref([]);
     const quizType = ref('');
+    const correctCount = ref(0);
+    const accuracyRate = ref(0);
     const errors = ref({});
     const { $bootstrap } = useNuxtApp();
     const { apiBase } = useRuntimeConfig().public;
     const { csrfURL } = useRuntimeConfig().public;
     
     // 取得單字集資料
-    const { data: flashCardSet , error } = await useSanctumFetch(`${apiBase}/flashCard/${id}?type=show&page=${page.value}&perPage=${perPage.value}`);
+    const { data: flashCardSet , error } = await useSanctumFetch(`${apiBase}/flashCard/${id}?&page=${page.value}&perPage=${perPage.value}`);
     if (error.value?.statusCode === 404) {
         throw createError({ statusCode: 404, statusMessage: '此單字集不存在' });
     } else if (error.value?.statusCode === 403) {
@@ -220,7 +283,7 @@
         if (isPerPage) {
             page.value = 1;
         }
-        const data = await $fetch(`${apiBase}/flashCard/${id}?type=show&page=${page.value}&perPage=${perPage.value}`, {
+        const data = await $fetch(`${apiBase}/flashCard/${id}?&page=${page.value}&perPage=${perPage.value}`, {
             method: 'GET',
             credentials: 'include'
         });
@@ -267,7 +330,7 @@
             return false;
         }
 
-        const data = await $fetch(`${apiBase}/flashCard/${id}?type=quiz`, {
+        const data = await $fetch(`${apiBase}/flashCard/details/${id}`, {
             method: 'GET',
             credentials: 'include'
         });
@@ -277,13 +340,11 @@
             return false;
         }
 
-        if (quizType.value === 'description') {
+        if (quizType.value === 'word') {
             const unique = new Set();
             for (const item of data) {
                 if (unique.has(item.word_description)) {
-                    errors.value.unique = `此單字集含有重複的說明：${item.word_description}，無法進行說明測驗`;
-                    console.log(item.word_description);
-                    
+                    errors.value.unique = `此單字集含有重複的說明：${item.word_description}，無法進行單字測驗`;                    
                     return false;
                 }
                 unique.add(item.word_description);
@@ -301,27 +362,64 @@
     }
 
     // 結束測驗
-    async function handlefinishQuiz() {
+    function handlefinishQuiz() {
+        let score = 0;
+        
         quizData.value = quizData.value.map(item => {
-            const answer = item.answer ? item.answer : '未作答';
-            const correctAnswer = quizType.value === 'word' ? item.word : item.word_description;
-            const isCorrect = item.answer?.trim().toLowerCase() === correctAnswer.toLowerCase();
+            const quizTypeVal = quizType.value;
+
+            const normalize = (text) => text.split(/[；;,、\s]+/).map(s => s.trim().toLowerCase()).filter(s => s.length > 0).sort();
+
+            const correctWord = item.word;
+            const correctDesc = item.word_description;
+
+            let userWord = (item.wordAnswer || '').trim();
+            let userDesc = (item.descriptionAnswer || '').trim();
+
+            let isWordCorrect = false;
+            let isDescriptionCorrect = false;
+
+            if (quizTypeVal === 'word') {
+                isWordCorrect = userWord.toLowerCase() === correctWord.toLowerCase();
+                if (isWordCorrect) score += 1;
+                userWord = userWord || '未作答';
+            } else if (quizTypeVal === 'description') {
+                const userParts = normalize(userDesc);
+                const correctParts = normalize(correctDesc);
+                isDescriptionCorrect = userParts.length > 0 && userParts.every((val, idx) => val === correctParts[idx]);
+                if (isDescriptionCorrect) score += 1;
+                userDesc = userDesc || '未作答';
+            } else if (quizTypeVal === 'listening') {
+                isWordCorrect = userWord.toLowerCase() === correctWord.toLowerCase();
+                const userParts = normalize(userDesc);
+                const correctParts = normalize(correctDesc);
+                isDescriptionCorrect = userParts.length > 0 && userParts.every((val, idx) => val === correctParts[idx]);
+                if (isWordCorrect) score += 0.5;
+                if (isDescriptionCorrect) score += 0.5;
+                userWord = userWord || '未作答';
+                userDesc = userDesc || '未作答';
+            }
+
             return {
                 ...item,
-                answer: answer,
-                isCorrect: isCorrect
-            }
-        })
+                answer: quizTypeVal === 'listening' ? { word: userWord, description: userDesc } :
+                        quizTypeVal === 'word' ? userWord : userDesc,
+                isWordCorrect,
+                isDescriptionCorrect
+            };
+        });
+        
+        correctCount.value = score;
+        accuracyRate.value = ((score / quizData.value.length) * 100).toFixed(2);
+
         quizState.value = 2;
     }
 
-    // 計算答對數
-    const correctCount = computed(() =>
-        quizData.value.filter(item => item.isCorrect).length
-    )
-
-    // 計算正確率（四捨五入至小數點後兩位）
-    const accuracyRate = computed(() =>
-        quizData.value.length === 0 ? 0 : ((correctCount.value / quizData.value.length) * 100).toFixed(2)
-    )
+    // 朗讀單字
+    const speak = (text) => {
+        const utterance = new SpeechSynthesisUtterance(text)
+        utterance.lang = 'en-US'
+        utterance.rate = 0.8
+        speechSynthesis.speak(utterance)
+    }
 </script>
