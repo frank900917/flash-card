@@ -35,4 +35,7 @@ return [
         ],
     ],
 
+    'google_tts' => [
+        'enabled' => env('GOOGLE_TTS', false),
+    ],
 ];

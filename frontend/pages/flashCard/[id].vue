@@ -31,8 +31,9 @@
         <p class="text-gray-600 my-3">{{ flashCardSet?.description }}</p>
         <!-- 顯示單字集 -->
         <div v-if="quizState === 0">
-            <div class="d-flex my-3 pb-2 border-bottom">
+            <div class="d-flex align-items-center my-3 pb-2 border-bottom">
                 <h2 class="me-auto">單字列表</h2>
+                <button class="btn btn-secondary m-2" data-bs-toggle="modal" data-bs-target="#ttsModal">語音設定</button>
                 <PaginationSizeSelector v-model="perPage" :onChange="fetchFlashCardSet"/>
             </div>
             <div class="space-y-4 mt-6">
@@ -64,6 +65,7 @@
         <form v-if="quizState === 1" @submit.prevent="handlefinishQuiz">
             <div class="d-flex my-3 pb-2 border-bottom">
                 <h2 class="me-auto align-self-center mb-0">測驗</h2>
+                <button v-if="quizType === 'listening'" type="button" class="btn btn-secondary m-2" data-bs-toggle="modal" data-bs-target="#ttsModal">語音設定</button>
                 <button type="submit" class="btn btn-info align-self-center">完成測驗</button>
             </div>
             <div class="space-y-4 mt-6" >
@@ -251,6 +253,67 @@
             </div>
         </div>
     </div>
+    <!-- 語音設定視窗 -->
+    <div class="modal fade" id="ttsModal" tabindex="-1" aria-labelledby="ttsModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <form id="ttsForm" @submit.prevent="handleTTSSubmit">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="ttsModalLabel">語音設定</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <!-- 語音服務 -->
+                        <div class="mb-3">
+                            <label for="ttsType" class="form-label">語音服務</label>
+                            <div id="ttsType">
+                                <div class="form-check form-check-inline">
+                                    <input class="form-check-input" type="radio" id="webTTS" value="web" v-model="ttsType">
+                                    <label class="form-check-label" for="webTTS">Web Speech</label>
+                                </div>
+                                <div class="form-check form-check-inline">
+                                    <input class="form-check-input" type="radio" id="googleTTS" value="google" v-model="ttsType" :disabled="!googleTTSAvailable">
+                                    <label class="form-check-label" for="googleTTS">Google TTS</label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 語言選擇 -->
+                        <div class="mb-3">
+                            <label for="ttsLanguage" class="form-label">語言</label>
+                            <div id="ttsLanguage">
+                                <div class="form-check form-check-inline" v-for="(label, key) in fixedLanguageOptions" :key="key">
+                                    <input class="form-check-input" type="radio" :id="'lang_' + key" :value="key" v-model="ttsSelectedLangFixed">
+                                    <label class="form-check-label" :for="'lang_' + key">{{ label }}</label>
+                                </div>
+
+                                <!-- 顯示其他語言下拉選單 -->
+                                <div v-if="ttsSelectedLangFixed === 'other'" class="mt-2">
+                                    <select v-model="ttsSelectedLangCustom" class="form-select">
+                                    <option v-for="lang in availableLanguages" :key="lang" :value="lang">{{ lang }}</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 語速 -->
+                        <div class="mb-3">
+                            <label for="ttsSpeed" class="form-label">語速</label>
+                            <div id="ttsSpeed">
+                                <div class="form-check form-check-inline" v-for="rate in speechRates" :key="rate">
+                                    <input class="form-check-input" type="radio" :id="'speed_' + rate" :value="rate" v-model.number="ttsSelectedSpeed">
+                                    <label class="form-check-label" :for="'speed_' + rate">{{ rate }}</label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer justify-content-center">
+                        <button type="submit" class="btn btn-primary" data-bs-dismiss="modal">確定</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
 </template>
 
 <script setup>    
@@ -265,6 +328,12 @@
     const quizType = ref('');
     const correctCount = ref(0);
     const accuracyRate = ref(0);
+    const ttsType = ref('web')
+    const ttsSelectedSpeed = ref(1)
+    const ttsSelectedLangFixed = ref('en')
+    const ttsSelectedLangCustom = ref('')
+    const googleTTSAvailable = ref(false)
+    const speechRates = [0.5, 0.75, 1.0, 1.25, 1.5, 2.0]
     const errors = ref({});
     const { $bootstrap } = useNuxtApp();
     const { apiBase } = useRuntimeConfig().public;
@@ -415,11 +484,93 @@
         quizState.value = 2;
     }
 
-    // 朗讀單字
-    const speak = (text) => {
+    // 檢查 googleTTS 是否可用
+    const { data: googleTTSStatus } = await useSanctumFetch(`${apiBase}/google-tts/status`);
+    googleTTSAvailable.value = googleTTSStatus.value.enabled === true;
+
+    // webTTS 支援語言
+    let webTTSLanguages = [];
+    onMounted(() => {
+        const setVoices = () => {
+            webTTSLanguages = [...new Set(window.speechSynthesis.getVoices().map(voice => voice.lang))].sort();
+        }
+        setVoices();
+        window.speechSynthesis.onvoiceschanged = () => {
+            setVoices();
+        }
+    });
+
+    // googleTTS 支援語言
+    const { data: googleTTSLanguages } = await useSanctumFetch(`${apiBase}/google-tts/languages`);
+
+    // 根據選取的 TTS 類型選擇語音服務
+    const availableLanguages = computed(() => {
+        if (ttsType.value === 'web') return webTTSLanguages
+        return googleTTSLanguages.value
+    })
+    
+    const fixedLanguageOptions = {
+        en: '英文（美國）',
+        zh: '繁體中文（台灣）',
+        ja: '日文',
+        other: '其他'
+    }
+
+    // 對應固定語言選項與語音服務的實際語言代碼
+    const langMap = {
+        web: {
+            en: 'en-US',
+            zh: 'zh-TW',
+            ja: 'ja-JP'
+        },
+        google: {
+            en: 'en-US',
+            zh: 'cmn-TW',
+            ja: 'ja-JP'
+        }
+    }
+
+    // 計算真正使用的語言代碼
+    const ttsSelectedLang = computed(() => {
+        if (ttsSelectedLangFixed.value === 'other') {
+            return ttsSelectedLangCustom.value
+        }
+        return langMap[ttsType.value][ttsSelectedLangFixed.value] || 'en-US'
+    })
+
+    // webTTS
+    const webttlSpeak = (text, lang, speed) => {
         const utterance = new SpeechSynthesisUtterance(text)
-        utterance.lang = 'en-US'
-        utterance.rate = 0.8
+        utterance.lang = lang
+        utterance.rate = speed
         speechSynthesis.speak(utterance)
     }
+
+    // googleTTS
+    const googlettlSpeak = async (text, lang, speed) => {
+        await $fetch(csrfURL, {
+            credentials: 'include'
+        });
+        const blob = await $fetch(`${apiBase}/google-tts/synthesize`, {
+            method: 'POST',
+            credentials: 'include',
+            headers: {
+                'X-XSRF-TOKEN': useCookie('XSRF-TOKEN').value
+            },
+            body: { text, lang, speed }
+        });
+        const audio = new Audio(URL.createObjectURL(blob));
+        audio.play();
+    };
+
+    // 按下朗讀單字
+    const speak = (text) => {
+        if (ttsType.value === 'google') {
+            googlettlSpeak(text, ttsSelectedLang.value, ttsSelectedSpeed.value);
+        } else {
+            webttlSpeak(text, ttsSelectedLang.value, ttsSelectedSpeed.value);
+        }
+    }
+    
+
 </script>

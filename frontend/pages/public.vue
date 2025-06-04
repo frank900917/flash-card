@@ -26,14 +26,14 @@
     const { apiBase } = useRuntimeConfig().public;
 
     // 獲取公開單字集清單
-    const { data: FlashCardLists } = await useSanctumFetch(`${apiBase}/public?page=${page.value}&perPage=${perPage.value}`);
+    const { data: FlashCardLists } = await useSanctumFetch(`${apiBase}/flashCard/public?page=${page.value}&perPage=${perPage.value}`);
     
     // 更新單字集清單
     async function fetchFlashCardLists(isPerPage) {
         if (isPerPage) {
             page.value = 1;
         }
-        const data = await $fetch(`${apiBase}/public?search=${search.value}&page=${page.value}&perPage=${perPage.value}`, {
+        const data = await $fetch(`${apiBase}/flashCard/public?search=${search.value}&page=${page.value}&perPage=${perPage.value}`, {
             method: 'GET'
         });
         FlashCardLists.value = data;
