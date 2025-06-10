@@ -9,9 +9,9 @@
 </template>
 
 <script setup>
-    const { onChange } = defineProps({
-        onChange: Function
-    });
-    const perPage = defineModel(true);
-    const options = [10, 25, 50, 100];
+const { onChange } = defineProps({
+    onChange: Function
+});
+const perPage = defineModel(true);
+const options = [10, 25, 50, 100];
 </script>

@@ -50,7 +50,7 @@
     const { $bootstrap } = useNuxtApp();
     const { apiBase } = useRuntimeConfig().public;
     const { csrfURL } = useRuntimeConfig().public;
-    const form = reactive({
+    const form = ref({
         current_password: '',
         new_password: '',
         new_password_confirmation: ''
@@ -60,7 +60,7 @@
     async function submit() {
         errors.value = {};
 
-        if (form.new_password !== form.new_password_confirmation) {
+        if (form.value.new_password !== form.value.new_password_confirmation) {
             errors.value.new_password = '密碼與確認密碼不一致';
             errors.value.new_password_confirmation = '密碼與確認密碼不一致';
             return;
@@ -74,7 +74,7 @@
 
         try {await $fetch(`${apiBase}/changePassword`, {
                 method: 'POST',
-                body: form,
+                body: form.value,
                 credentials: 'include',
                 headers: {
                     'X-XSRF-TOKEN': useCookie('XSRF-TOKEN').value

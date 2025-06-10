@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 use Google\Cloud\TextToSpeech\V1\Client\TextToSpeechClient;
 use Google\Cloud\TextToSpeech\V1\ListVoicesRequest;
 use Google\Cloud\TextToSpeech\V1\SynthesisInput;
@@ -18,6 +19,7 @@ class GoogleTTSController extends Controller
         return config('services.google_tts.enabled');
     }
     
+    // 獲取 Google TTS 狀態
     public function status()
     {
         return response()->json([
@@ -25,27 +27,36 @@ class GoogleTTSController extends Controller
         ]);
     }
 
+    // 獲取 Google TTS 支援語言列表
     public function listLanguages()
     {
         if (!$this->isTTSEnabled()) {
             return response()->json(['message' => 'Google TTS is disabled.'], 403);
         }
 
-        $client = new TextToSpeechClient();
-        $voices = $client->listVoices(new ListVoicesRequest());
-        $languages = [];
+        // 嘗試從快取取得語言列表
+        $languages = Cache::get('google_tts_languages');
 
-        foreach ($voices->getVoices() as $voice) {
-            foreach ($voice->getLanguageCodes() as $lang) {
-                $languages[$lang] = true;
+        if (!$languages) {
+            $client = new TextToSpeechClient();
+            $voices = $client->listVoices(new ListVoicesRequest());
+
+            $languageSet = [];
+
+            foreach ($voices->getVoices() as $voice) {
+                foreach ($voice->getLanguageCodes() as $lang) {
+                    $languageSet[$lang] = true;
+                }
             }
+
+            $languages = array_keys($languageSet);
+
+            // 將結果快取 6 小時
+            Cache::put('google_tts_languages', $languages, now()->addHours(6));
         }
 
-        $client->close();
-
-        return response()->json(array_keys($languages));
+        return response()->json($languages);
     }
-
 
     public function synthesize(Request $request)
     {
@@ -65,7 +76,9 @@ class GoogleTTSController extends Controller
         $textToSpeechClient = new TextToSpeechClient();
         $input = (new SynthesisInput())->setText($text);
         $voice = (new VoiceSelectionParams())->setLanguageCode($languageCode);
-        $audioConfig = (new AudioConfig())->setAudioEncoding(AudioEncoding::MP3);
+        $audioConfig = (new AudioConfig())
+            ->setAudioEncoding(AudioEncoding::MP3)
+            ->setSpeakingRate($speed);
         $request = (new SynthesizeSpeechRequest())
             ->setInput($input)
             ->setVoice($voice)

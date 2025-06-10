@@ -18,25 +18,25 @@
 </template>
 
 <script setup>
-    const { flashCardSet, isFormAccount } = defineProps({
-        flashCardSet: Object,
-        isFormAccount: Boolean
-    });
-    
-    // 格式化時間
-    function formatDate(dateStr) {
-        const date = new Date(dateStr)
-        return date.toLocaleDateString()
-    }
+const { flashCardSet, isFormAccount } = defineProps({
+    flashCardSet: Object,
+    isFormAccount: Boolean
+});
 
-    // 返回路徑
-    const backPath = computed(() => {
-        if (isFormAccount) {
-            return { name:'flashCard-id', params: { id: flashCardSet.id }, query: { from: 'account' } }
-        } else {
-            return { name:'flashCard-id', params: { id: flashCardSet.id } }
-        }
-    })
+// 格式化時間
+function formatDate(dateStr) {
+    const date = new Date(dateStr)
+    return date.toLocaleDateString()
+}
+
+// 返回路徑
+const backPath = computed(() => {
+    if (isFormAccount) {
+        return { name: 'flashCard-id', params: { id: flashCardSet.id }, query: { from: 'account' } }
+    } else {
+        return { name: 'flashCard-id', params: { id: flashCardSet.id } }
+    }
+})
 </script>
 
 <style scoped>

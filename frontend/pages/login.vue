@@ -11,7 +11,7 @@
                 </div>
                 <div class="mb-3">
                     <label for="password" class="form-label">密碼</label>
-                    <input type="password" class="form-control" id="password" v-model="password" required 
+                    <input type="password" class="form-control" id="password" v-model="password" required
                         placeholder="輸入密碼" :class="{ 'is-invalid': errors.password }" />
                     <div class="invalid-feedback">{{ errors.password }}</div>
                 </div>
@@ -19,7 +19,7 @@
                 <button type="submit" class="btn btn-primary w-100" :disabled="isSubmitting">登入</button>
 
                 <div class="text-center mt-3">
-                <NuxtLink to="/register" class="btn btn-outline-secondary w-100">還沒有帳號？註冊</NuxtLink>
+                    <NuxtLink to="/register" class="btn btn-outline-secondary w-100">還沒有帳號？註冊</NuxtLink>
                 </div>
             </form>
         </div>
@@ -27,53 +27,53 @@
 </template>
 
 <script setup>
-    const { login } = useSanctumAuth();
-    const username = ref('');
-    const password = ref('');
-    const errors = ref({});
-    const isSubmitting = ref(false);
+const { login } = useSanctumAuth();
+const username = ref('');
+const password = ref('');
+const errors = ref({});
+const isSubmitting = ref(false);
 
-    // 登入驗證
-    function validate() {
-        errors.value = {};
+// 登入驗證
+function validate() {
+    errors.value = {};
 
-        if (username.value.length < 8) {
-            errors.value.username = '帳號長度至少需 8 個字元';
-            return false;
-        }
-
-        if (username.value.length > 20) {
-            errors.value.username = '帳號長度不能超過 20 個字元';
-            return false;
-        }
-        return true;
+    if (username.value.length < 8) {
+        errors.value.username = '帳號長度至少需 8 個字元';
+        return false;
     }
 
-    async function handleLogin() {
-        if (!validate()) {
-            return false;
-        }
+    if (username.value.length > 20) {
+        errors.value.username = '帳號長度不能超過 20 個字元';
+        return false;
+    }
+    return true;
+}
 
-        isSubmitting.value = true;
+async function handleLogin() {
+    if (!validate()) {
+        return false;
+    }
 
-        try {
-            const userCredentials = {
-                username: username.value,
-                password: password.value
-            };
+    isSubmitting.value = true;
 
-            await login(userCredentials);
+    try {
+        const userCredentials = {
+            username: username.value,
+            password: password.value
+        };
 
-        } catch (error) {
-            const backendErrors = error.response?._data?.errors;
-            if (backendErrors) {
-                for (const key in backendErrors) {
-                    errors.value[key] = backendErrors[key][0];
-                }
-            } else {
-                alert(error);
+        await login(userCredentials);
+
+    } catch (error) {
+        const backendErrors = error.response?._data?.errors;
+        if (backendErrors) {
+            for (const key in backendErrors) {
+                errors.value[key] = backendErrors[key][0];
             }
-            isSubmitting.value = false;
+        } else {
+            alert(error);
         }
+        isSubmitting.value = false;
     }
+}
 </script>

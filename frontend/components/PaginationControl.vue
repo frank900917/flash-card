@@ -34,7 +34,8 @@
 
                 <!-- 下一頁 -->
                 <li class="page-item" :class="{ disabled: page === datas.last_page }">
-                    <button class="page-link" @click="goToPage(page + 1)" :disabled="page === datas.last_page">下一頁</button>
+                    <button class="page-link" @click="goToPage(page + 1)"
+                        :disabled="page === datas.last_page">下一頁</button>
                 </li>
             </ul>
         </nav>
@@ -42,24 +43,24 @@
 </template>
 
 <script setup>
-    const { datas, fetchDatas } = defineProps({
-        datas: Object,
-        fetchDatas: Function
-    });
-    const page = defineModel();
-    function goToPage(p) {
-        if (p >= 1 && p <= datas.last_page) {
-            page.value = p;
-            fetchDatas(false);
-        }
+const { datas, fetchDatas } = defineProps({
+    datas: Object,
+    fetchDatas: Function
+});
+const page = defineModel();
+function goToPage(p) {
+    if (p >= 1 && p <= datas.last_page) {
+        page.value = p;
+        fetchDatas(false);
     }
-    const startPage = computed(() => Math.max(Math.min(datas.last_page - 6, page.value - 2), 2));
-    const endPage = computed(() => Math.min(page.value + Math.max(6 - page.value, 2), datas.last_page - 1));
-    const middlePages = computed(() => {
-        const pages = [];
-        for (let i = startPage.value; i <= endPage.value; i++) {
-            pages.push(i);
-        }
-        return pages;
-    });
+}
+const startPage = computed(() => Math.max(Math.min(datas.last_page - 6, page.value - 2), 2));
+const endPage = computed(() => Math.min(page.value + Math.max(6 - page.value, 2), datas.last_page - 1));
+const middlePages = computed(() => {
+    const pages = [];
+    for (let i = startPage.value; i <= endPage.value; i++) {
+        pages.push(i);
+    }
+    return pages;
+});
 </script>
