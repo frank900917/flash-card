@@ -6,8 +6,8 @@
 
 - 使用者註冊 / 登入 / 登出 / 修改密碼
 - 單字集 CRUD（私人 / 公開）
-- 單字 / 單字集 列表顯示與分頁
-- 語音播放功能
+- 單字 / 單字集的列表顯示與分頁
+- 單字播放功能
   - （預設）Web Speech API
   - （可選）Google Cloud Text-to-Speech
   - 支援語音語言選擇與語速調整
@@ -44,8 +44,10 @@ php artisan key:generate
 編輯 `.env` 檔案，設定以下項目：
 
 ```env
+# 時區設定（範例）
 APP_TIMEZONE=Asia/Taipei
 
+# 資料庫設定（範例）
 DB_CONNECTION=mysql
 DB_HOST=127.0.0.1
 DB_PORT=3306
@@ -53,8 +55,8 @@ DB_DATABASE=your_database
 DB_USERNAME=your_username
 DB_PASSWORD=your_password
 
-# 啟用 Google TTS（可選）
-GOOGLE_TTS=true
+# Google TTS 設定（可選）
+GOOGLE_TTS=false
 GOOGLE_APPLICATION_CREDENTIALS=完整憑證路徑/key.json
 ```
 
