@@ -221,8 +221,8 @@
                 </div>
                 <div class="modal-body">確定要刪除此單字集？</div>
                 <div class="modal-footer justify-content-center">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
                     <button type="button" class="btn btn-danger" @click="handleDelate">確定</button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
                 </div>
             </div>
         </div>
@@ -266,8 +266,8 @@
                         <div class="text-danger">{{ errors.unique }}</div>
                     </div>
                     <div class="modal-footer justify-content-center">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
                         <button type="submit" class="btn btn-primary">確定</button>
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
                     </div>
                 </form>
             </div>
@@ -318,10 +318,11 @@
                                 </div>
                                 <!-- 其他語言下拉選單 -->
                                 <div v-if="tempTTSSettings.lang === 'other'" class="mt-2">
-                                    <select v-model="tempTTSSettings.customLang" class="form-select">
+                                    <select v-model="tempTTSSettings.customLang" class="form-select" :class="{ 'is-invalid': errors.customLang }">
                                         <option v-for="lang in ttsForm.language[tempTTSSettings.type].other" :key="lang"
                                             :value="lang">{{ lang }}</option>
                                     </select>
+                                    <div class="text-danger">{{ errors.customLang }}</div>
                                 </div>
                             </div>
                         </div>
@@ -340,8 +341,8 @@
                         </div>
                     </div>
                     <div class="modal-footer justify-content-center">
+                        <button type="submit" class="btn btn-primary">確定</button>
                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
-                        <button type="submit" class="btn btn-primary" data-bs-dismiss="modal">確定</button>
                     </div>
                 </form>
             </div>
@@ -365,6 +366,11 @@ const errors = ref({});
 const { $bootstrap } = useNuxtApp();
 const { apiBase } = useRuntimeConfig().public;
 const { csrfURL } = useRuntimeConfig().public;
+
+onMounted(() => {
+    // TTS 初始化
+    initTTS();
+});
 
 // 取得單字集資料
 const { data: flashCardSet, error } = await useSanctumFetch(`${apiBase}/flashCard/${id}?&page=${page.value}&perPage=${perPage.value}`);
@@ -548,11 +554,8 @@ const ttsForm = ref({
     speechRates: [0.5, 0.75, 1.0, 1.25, 1.5, 2.0]
 });
 
-// 檢查 Google TTS 是否可用
-const { data: googleTTSStatus } = await useSanctumFetch(`${apiBase}/google-tts/status`);
-ttsForm.value.isGoogleTTSEnabled = googleTTSStatus.value.enabled === true;
-
-onMounted(() => {
+// TTS 初始化
+function initTTS() {
     // 取得 Web TTS 支援語言
     const setVoices = () => {
         const voices = window.speechSynthesis.getVoices();
@@ -567,40 +570,73 @@ onMounted(() => {
     const saved = localStorage.getItem('ttsSettings');
     if (saved) {
         ttsSettings.value = JSON.parse(saved);
-        tempTTSSettings.value = {
-            type: ttsSettings.value.type,
-            speed: ttsSettings.value.speed,
-            lang: ttsSettings.value.lang,
-            customLang: ''
-        };
+        // 檢查語言是否在常見語言中
+        if (ttsForm.value.language[ttsSettings.value.type].common[ttsSettings.value.lang]) {
+            tempTTSSettings.value = {
+                type: ttsSettings.value.type,
+                speed: ttsSettings.value.speed,
+                lang: ttsSettings.value.lang,
+                customLang: ''
+            };
+        } else {
+            tempTTSSettings.value = {
+                type: ttsSettings.value.type,
+                speed: ttsSettings.value.speed,
+                lang: 'other',
+                customLang: ttsSettings.value.lang
+            };
+        }
     }
 
     // 關閉語音設定視窗時重置選項
     document.getElementById('ttsModal').addEventListener('hidden.bs.modal', () => {
-        tempTTSSettings.value = {
-            type: ttsSettings.value.type,
-            speed: ttsSettings.value.speed,
-            lang: ttsSettings.value.lang,
-            customLang: ''
-        };
+        // 檢查語言是否在常見語言中
+        if (ttsForm.value.language[ttsSettings.value.type].common[ttsSettings.value.lang]) {
+            tempTTSSettings.value = {
+                type: ttsSettings.value.type,
+                speed: ttsSettings.value.speed,
+                lang: ttsSettings.value.lang,
+                customLang: ''
+            };
+        } else {
+            tempTTSSettings.value = {
+                type: ttsSettings.value.type,
+                speed: ttsSettings.value.speed,
+                lang: 'other',
+                customLang: ttsSettings.value.lang
+            };
+        }
     });
-});
+}
+
+// 檢查 Google TTS 是否可用
+const { data: googleTTSStatus } = await useSanctumFetch(`${apiBase}/google-tts/status`);
+ttsForm.value.isGoogleTTSEnabled = googleTTSStatus.value.enabled === true;
 
 // 取得 Google TTS 支援語言
-const { data: googleTTSLanguages } = await useSanctumFetch(`${apiBase}/google-tts/languages`);
-ttsForm.value.language.google.other = googleTTSLanguages.value.filter(
-    lang => !Object.keys(ttsForm.value.language.google.common).includes(lang)
-);
+if (ttsForm.value.isGoogleTTSEnabled) {
+    const { data: googleTTSLanguages } = await useSanctumFetch(`${apiBase}/google-tts/languages`);
+    ttsForm.value.language.google.other = googleTTSLanguages.value.filter(
+        lang => !Object.keys(ttsForm.value.language.google.common).includes(lang)
+    );
+}
 
 // 提交表單，更新 ttsSettings
 const handleTTSSubmit = () => {
     const selectedLang = tempTTSSettings.value.lang === 'other' ? tempTTSSettings.value.customLang : tempTTSSettings.value.lang;
+    errors.value = {};
+    if (tempTTSSettings.value.lang === 'other' && !ttsForm.value.language[tempTTSSettings.value.type].other.includes(selectedLang)) {
+        errors.value.customLang = '請選擇有效的語言';
+        return;
+    }
     ttsSettings.value = {
         type: tempTTSSettings.value.type,
         speed: tempTTSSettings.value.speed,
         lang: selectedLang
     };
     localStorage.setItem('ttsSettings', JSON.stringify(ttsSettings.value));
+    const ttsModal = $bootstrap.Modal.getInstance(document.getElementById('ttsModal'));
+    ttsModal.hide();
 };
 
 // Web TTS 朗讀

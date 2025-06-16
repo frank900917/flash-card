@@ -27,7 +27,10 @@ class FlashCardSetRequest extends FormRequest
             'author' => 'required|string|max:255',
             'isPublic' => 'required|boolean',
             'details' => 'required|array|min:1',
-            'details.*.word' => ['required', 'string', 'max:255',
+            'details.*.word' => [
+                'required',
+                'string',
+                'max:255',
                 function ($attribute, $value, $fail) {
                     $details = $this->input('details');
                     $wordCounts = array_count_values(array_map(fn($detail) => strtolower($detail['word']), $details));

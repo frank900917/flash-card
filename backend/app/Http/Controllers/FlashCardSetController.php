@@ -18,16 +18,16 @@ class FlashCardSetController extends Controller
         $search = $request->input('search');
 
         $sets = FlashCardSet::select('id', 'title', 'description', 'author', 'isPublic', 'updated_at')
-                            ->where('user_id', Auth::id())
-                            ->when($search, fn ($query) => $query->where('title', 'LIKE', '%' . $search . '%'))
-                            ->withCount('details')
-                            ->latest()
-                            ->paginate($perPage);
-        
+            ->where('user_id', Auth::id())
+            ->when($search, fn($query) => $query->where('title', 'LIKE', '%' . $search . '%'))
+            ->withCount('details')
+            ->latest()
+            ->paginate($perPage);
+
         if (!$sets) {
             return response()->json(['message' => 'Not Found'], 404);
         }
-        
+
         return response()->json($sets);
     }
 
@@ -101,9 +101,9 @@ class FlashCardSetController extends Controller
     public function edit($id)
     {
         $set = FlashCardSet::where('id', $id)
-                           ->where('user_id', Auth::id())
-                           ->with(['details' => fn ($query) => $query->select('flash_card_set_id', 'word', 'word_description')])
-                           ->firstOrFail();
+            ->where('user_id', Auth::id())
+            ->with(['details' => fn($query) => $query->select('flash_card_set_id', 'word', 'word_description')])
+            ->firstOrFail();
 
         if (!$set) {
             return response()->json(['message' => 'Not Found'], 404);
@@ -123,7 +123,7 @@ class FlashCardSetController extends Controller
         if (!$set) {
             return response()->json(['message' => 'Not Found'], 404);
         }
-        
+
         $set->update($validated);
 
         // 刪除全部單字並重新建立
@@ -165,11 +165,11 @@ class FlashCardSetController extends Controller
         $perPage = $request->input('perPage', 25);
 
         $sets = FlashCardSet::select('id', 'title', 'description', 'author', 'isPublic', 'updated_at')
-                            ->where('isPublic', true)
-                            ->when($search, fn ($query) => $query->where('title', 'LIKE', '%' . $search . '%'))
-                            ->withCount('details')
-                            ->latest()
-                            ->paginate($perPage);
+            ->where('isPublic', true)
+            ->when($search, fn($query) => $query->where('title', 'LIKE', '%' . $search . '%'))
+            ->withCount('details')
+            ->latest()
+            ->paginate($perPage);
 
         if (!$sets) {
             return response()->json(['message' => 'Not Found'], 404);

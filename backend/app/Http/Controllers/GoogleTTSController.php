@@ -18,7 +18,7 @@ class GoogleTTSController extends Controller
     {
         return config('services.google_tts.enabled');
     }
-    
+
     // 獲取 Google TTS 狀態
     public function status()
     {
