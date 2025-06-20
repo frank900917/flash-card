@@ -22,7 +22,7 @@
                     <div class="invalid-feedback">{{ errors.confirmPassword }}</div>
                 </div>
 
-                <button type="button" class="btn btn-primary w-100" :disabled="isSubmitting">建立帳號</button>
+                <button type="submit" class="btn btn-primary w-100" :disabled="isSubmitting">建立帳號</button>
 
                 <div class="text-center mt-3">
                     <NuxtLink to="/login" class="btn btn-outline-secondary w-100">已有帳號？登入</NuxtLink>
@@ -48,6 +48,10 @@
 </template>
 
 <script setup>
+definePageMeta({
+    middleware: ['guest-only']
+});
+
 const username = ref('');
 const password = ref('');
 const confirmPassword = ref('');

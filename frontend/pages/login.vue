@@ -27,6 +27,10 @@
 </template>
 
 <script setup>
+definePageMeta({
+    middleware: ['guest-only']
+});
+
 const { login } = useSanctumAuth();
 const username = ref('');
 const password = ref('');
