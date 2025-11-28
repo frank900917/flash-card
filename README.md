@@ -15,7 +15,7 @@
 ## 使用技術 
 
 - 後端：Laravel 12、Laravel Sanctum
-- 前端：Nuxt 3、Bootstrap 5
+- 前端：Nuxt 4、Bootstrap 5
 - TTS：Web Speech API、Google Cloud TTS
 
 ## 環境建置
