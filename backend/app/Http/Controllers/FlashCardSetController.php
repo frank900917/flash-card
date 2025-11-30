@@ -2,185 +2,120 @@
 
 namespace App\Http\Controllers;
 
-// use App\Models\User;
-use App\Models\FlashCardSet;
-use App\Models\FlashCardSetDetail;
-use App\Http\Requests\FlashCardSetRequest;
+use App\Services\FlashCardSetService;
+use App\Validators\FlashCardSetValidator;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
 
 class FlashCardSetController extends Controller
 {
+    protected $flashCardSetService,
+              $flashCardSetValidator;
+
+    public function __construct(
+        FlashCardSetService $flashCardSetService,
+        FlashCardSetValidator $flashCardSetValidator
+    )
+    {
+        $this->flashCardSetService = $flashCardSetService;
+        $this->flashCardSetValidator = $flashCardSetValidator;
+    }
+
     // 我的單字集清單
     public function index(Request $request)
     {
-        $perPage = $request->input('perPage', 25);
-        $search = $request->input('search');
-
-        $sets = FlashCardSet::select('id', 'title', 'description', 'author', 'isPublic', 'updated_at')
-            ->where('user_id', Auth::id())
-            ->when($search, fn($query) => $query->where('title', 'LIKE', '%' . $search . '%'))
-            ->withCount('details')
-            ->latest()
-            ->paginate($perPage);
-
-        if (!$sets) {
+        $result = $this->flashCardSetService->getFlashCardSetList($request);
+        if (!$result) {
             return response()->json(['message' => 'Not Found'], 404);
         }
-
-        return response()->json($sets);
+        return response()->json($result, 200);
     }
 
     // 建立單字集
-    public function store(FlashCardSetRequest $request)
+    public function store(Request $request)
     {
-        $validated = $request->validated();
-
-        $set = FlashCardSet::create([
-            'user_id' => Auth::id(),
-            'title' => $validated['title'],
-            'description' => $validated['description'] ?? null,
-            'author' => $validated['author'],
-            'isPublic' => $validated['isPublic']
-        ]);
-
-        foreach ($validated['details'] as $detail) {
-            $set->details()->create([
-                'word' => $detail['word'],
-                'word_description' => $detail['word_description']
-            ]);
-        }
-
+        $this->flashCardSetValidator->checkFlashCardSet($request);
+        $result = $this->flashCardSetService->createFlashCardSet($request);
         return response()->json([
             'message' => '單字集建立成功！',
-            'data' => $set
-        ]);
+            'data' => $result
+        ], 200);
     }
 
     // 檢視單字集
     public function show(Request $request, $id)
     {
-        $perPage = $request->input('perPage');
-
-        $set = FlashCardSet::where('id', $id)->firstOrFail();
-
-        if (!$set) {
-            return response()->json(['message' => 'Not Found'], 404);
+        $result = $this->flashCardSetService->getFlashCardSet($request, $id);
+        if ($result['message'] === 'Forbidden') {
+            return response()->json($result, 403);
         }
-
-        if (!$set->isPublic && (!Auth::check() || Auth::id() !== $set->user_id)) {
-            return response()->json(['message' => 'Forbidden'], 403);
+        if ($result['message'] === 'Not Found') {
+            return response()->json($result, 404);
         }
-
-        $details = $set->details()->select('word', 'word_description')->paginate($perPage);
-        $set->details = $details;
-
-        return response()->json($set);
+        return response()->json($result, 200);
     }
 
     // 檢視單字集所有單字
-    public function showDetails(Request $request, $id)
+    public function showDetails($id)
     {
-        $set = FlashCardSet::where('id', $id)->firstOrFail();
-
-        if (!$set) {
-            return response()->json(['message' => 'Not Found'], 404);
+        $result = $this->flashCardSetService->getFlashCardSetAllDetails($id);
+        if ($result['message'] === 'Forbidden') {
+            return response()->json($result, 403);
         }
-
-        // 私人單字集 且 未登入或非擁有者
-        if (!$set->isPublic && (!Auth::check() || Auth::id() !== $set->user_id)) {
-            return response()->json(['message' => 'Forbidden'], 403);
+        if ($result['message'] === 'Not Found') {
+            return response()->json($result, 404);
         }
-
-        $set = FlashCardSetDetail::where('flash_card_set_id', $id)->select('word', 'word_description')->get();
-
-        return response()->json($set);
+        return response()->json($result, 200);
     }
 
     // 編輯單字集
     public function edit($id)
     {
-        $set = FlashCardSet::where('id', $id)
-            ->where('user_id', Auth::id())
-            ->with(['details' => fn($query) => $query->select('flash_card_set_id', 'word', 'word_description')])
-            ->firstOrFail();
-
-        if (!$set) {
+        $result = $this->flashCardSetService->getUserFlashCardSet($id);
+        if (!$result) {
             return response()->json(['message' => 'Not Found'], 404);
         }
-
-        return response()->json($set);
+        return response()->json($result, 200);
     }
 
-
     // 更新單字集
-    public function update(FlashCardSetRequest $request, $id)
+    public function update(Request $request, $id)
     {
-        $validated = $request->validated();
-
-        $set = FlashCardSet::where('user_id', Auth::id())->findOrFail($id);
-
-        if (!$set) {
-            return response()->json(['message' => 'Not Found'], 404);
+        $this->flashCardSetValidator->checkFlashCardSet($request);
+        $result = $this->flashCardSetService->updateFlashCardSet($request, $id);
+        if ($result['message'] === 'Forbidden') {
+            return response()->json($result, 403);
         }
-
-        $set->update($validated);
-
-        // 刪除全部單字並重新建立
-        $set->details()->delete();
-
-        foreach ($validated['details'] as $detail) {
-            $set->details()->create([
-                'word' => $detail['word'],
-                'word_description' => $detail['word_description']
-            ]);
+        if ($result['message'] === 'Not Found') {
+            return response()->json($result, 404);
         }
-
         return response()->json([
             'message' => '單字集更新成功！',
-            'data' => $set
-        ]);
+            'data' => $result['set']
+        ], 200);
     }
 
     // 刪除單字集
     public function destroy($id)
     {
-        $set = FlashCardSet::where('user_id', Auth::id())->findOrFail($id);
-
-        if (!$set) {
-            return response()->json(['message' => 'Not Found'], 404);
+        $result = $this->flashCardSetService->deleteFlashCardSet($id);
+        if ($result['message'] === 'Forbidden') {
+            return response()->json($result, 403);
         }
-
-        $set->delete();
-
+        if ($result['message'] === 'Not Found') {
+            return response()->json($result, 404);
+        }
         return response()->json([
             'message' => '單字集刪除成功！'
-        ]);
+        ], 200);
     }
 
     // 公開單字集清單
     public function publicIndex(Request $request)
     {
-        $search = $request->input('search');
-        $perPage = $request->input('perPage', 25);
-
-        $sets = FlashCardSet::select('id', 'title', 'description', 'author', 'isPublic', 'updated_at')
-            ->where('isPublic', true)
-            ->when($search, fn($query) => $query->where('title', 'LIKE', '%' . $search . '%'))
-            ->withCount('details')
-            ->latest()
-            ->paginate($perPage);
-
-        if (!$sets) {
-            return response()->json(['message' => 'Not Found'], 404);
+        $result = $this->flashCardSetService->getPublicFlashCardSetList($request);
+        if ($result['message'] === 'Not Found') {
+            return response()->json($result, 404);
         }
-
-        // 遮蔽作者，只顯示前後各3個字元
-        $sets->getCollection()->transform(function ($item) {
-            $item->author = substr($item->author, 0, 3) . '***' . substr($item->author, -3);
-            return $item;
-        });
-
-        return response()->json($sets);
+        return response()->json($result, 200);
     }
 }
